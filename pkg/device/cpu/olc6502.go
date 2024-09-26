@@ -77,13 +77,18 @@ func (olc *Olc6502) SetFlag(flag uint8, value bool) {
 }
 
 func (olc *Olc6502) GetFlag(flag uint8) uint8 {
-    if olc.status & flag > 0 {
-    return 1 
-    } else {
-    return 0
-    }
+	if olc.status&flag > 0 {
+		return 1
+	} else {
+		return 0
+	}
 }
 
 func (olc *Olc6502) Fetch() uint8 {
-	return 0
+	// can't compare functions
+	if lookup[olc.opcode].AddrModeName != "IMP" {
+		olc.fetched = olc.Read(olc.addrAbs)
+	}
+
+	return olc.fetched
 }

@@ -5,7 +5,14 @@ func (olc *Olc6502) ADC() uint8 { // add with carry
 }
 
 func (olc *Olc6502) AND() uint8 { // and (with accumulator)
-	return 0
+    olc.Fetch()
+
+    olc.a &= olc.fetched
+
+    olc.SetFlag(FLAGS_6502_Z, olc.a == 0x00)
+    olc.SetFlag(FLAGS_6502_N, (olc.a & 0x80) != 0)
+
+	return 1
 }
 
 func (olc *Olc6502) ASL() uint8 { // arithmetic shift left
