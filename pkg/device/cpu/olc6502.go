@@ -3,14 +3,14 @@ package cpu
 import "nes-emulator/pkg/device"
 
 const (
-	FLAGS_6502_C = uint8(1 << 0) // carry bit
-	FLAGS_6502_Z = uint8(1 << 1) // zero
-	FLAGS_6502_I = uint8(1 << 2) // disable interrupts
-	FLAGS_6502_D = uint8(1 << 3) // decimal mode
-	FLAGS_6502_B = uint8(1 << 4) // break
-	FLAGS_6502_U = uint8(1 << 5) // unused
-	FLAGS_6502_V = uint8(1 << 6) // overflow
-	FLAGS_6502_N = uint8(1 << 7) // negative
+	FLAG_C = uint8(1 << 0) // carry bit
+	FLAG_Z = uint8(1 << 1) // zero
+	FLAG_I = uint8(1 << 2) // disable interrupts
+	FLAG_D = uint8(1 << 3) // decimal mode
+	FLAG_B = uint8(1 << 4) // break
+	FLAG_U = uint8(1 << 5) // unused
+	FLAG_V = uint8(1 << 6) // overflow
+	FLAG_N = uint8(1 << 7) // negative
 )
 
 var lookup []Instruction
@@ -86,7 +86,7 @@ func (olc *Olc6502) GetFlag(flag uint8) uint8 {
 
 func (olc *Olc6502) Fetch() uint8 {
 	// can't compare functions
-	if lookup[olc.opcode].AddrModeName != "IMP" {
+	if lookup[olc.opcode].AddrModeName != ADDR_MODE_IMP {
 		olc.fetched = olc.Read(olc.addrAbs)
 	}
 

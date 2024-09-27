@@ -1,5 +1,20 @@
 package cpu
 
+const (
+	ADDR_MODE_IMP byte = iota
+	ADDR_MODE_IMM
+	ADDR_MODE_ZP0
+	ADDR_MODE_ZPX
+	ADDR_MODE_ZPY
+	ADDR_MODE_REL
+	ADDR_MODE_ABS
+	ADDR_MODE_ABX
+	ADDR_MODE_ABY
+	ADDR_MODE_IND
+	ADDR_MODE_IZX
+	ADDR_MODE_IZY
+)
+
 func (olc *Olc6502) IMP() uint8 {
 	olc.fetched = olc.a
 
@@ -41,14 +56,14 @@ func (olc *Olc6502) ZPY() uint8 {
 }
 
 func (olc *Olc6502) REL() uint8 {
-    olc.addrRel = uint16(olc.Read(olc.pc))
-    olc.pc++
+	olc.addrRel = uint16(olc.Read(olc.pc))
+	olc.pc++
 
-    if olc.addrRel & 0x80 != 0 {
-        olc.addrRel |= 0xFF00
-    }
+	if olc.addrRel&0x80 != 0 {
+		olc.addrRel |= 0xFF00
+	}
 
-    return 0
+	return 0
 }
 
 func (olc *Olc6502) ABS() uint8 {
