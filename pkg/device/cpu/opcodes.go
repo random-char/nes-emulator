@@ -63,14 +63,14 @@ const (
 )
 
 func (olc *Olc6502) ADC() uint8 { // add with carry
-	olc.Fetch()
+	olc.fetch()
 
-	tmp := uint16(olc.a) + uint16(olc.fetched) + uint16(olc.GetFlag(FLAG_C))
+	tmp := uint16(olc.a) + uint16(olc.fetched) + uint16(olc.getFlag(FLAG_C))
 
-	olc.SetFlag(FLAG_C, tmp > 255)
-	olc.SetFlag(FLAG_Z, tmp&0x00FF == 0)
-	olc.SetFlag(FLAG_N, tmp&0x80 != 0)
-	olc.SetFlag(FLAG_V, (^(uint16(olc.a)^uint16(olc.fetched))&(uint16(olc.a)^tmp))&0x0080 != 0)
+	olc.setFlag(FLAG_C, tmp > 255)
+	olc.setFlag(FLAG_Z, tmp&0x00FF == 0)
+	olc.setFlag(FLAG_N, tmp&0x80 != 0)
+	olc.setFlag(FLAG_V, (^(uint16(olc.a)^uint16(olc.fetched))&(uint16(olc.a)^tmp))&0x0080 != 0)
 
 	olc.a = uint8(tmp & 0x00FF)
 
@@ -78,22 +78,37 @@ func (olc *Olc6502) ADC() uint8 { // add with carry
 }
 
 func (olc *Olc6502) AND() uint8 { // and (with accumulator)
-	olc.Fetch()
+	olc.fetch()
 
 	olc.a &= olc.fetched
 
-	olc.SetFlag(FLAG_Z, olc.a == 0x00)
-	olc.SetFlag(FLAG_N, (olc.a&0x80) != 0)
+	olc.setFlag(FLAG_Z, olc.a == 0x00)
+	olc.setFlag(FLAG_N, (olc.a&0x80) != 0)
 
 	return 1
 }
 
 func (olc *Olc6502) ASL() uint8 { // arithmetic shift left
+	olc.fetch()
+
+	tmp := uint16(olc.fetched) << 1
+
+	olc.setFlag(FLAG_C, (tmp&0xFF00) > 0)
+	olc.setFlag(FLAG_Z, (tmp&0x00FF) == 0)
+	olc.setFlag(FLAG_N, (tmp&0x80) != 0)
+
+	if lookup[olc.opcode].AddrModeName == ADDR_MODE_IMP {
+		olc.a = uint8(tmp & 0x00FF)
+	} else {
+		olc.write(olc.addrAbs, uint8(tmp&0x00FF))
+
+	}
+
 	return 0
 }
 
 func (olc *Olc6502) BCC() uint8 { // branch on carry clear
-	if olc.GetFlag(FLAG_C) == 0 {
+	if olc.getFlag(FLAG_C) == 0 {
 		olc.cycles++
 
 		olc.addrAbs = olc.pc + olc.addrRel
@@ -108,7 +123,7 @@ func (olc *Olc6502) BCC() uint8 { // branch on carry clear
 }
 
 func (olc *Olc6502) BCS() uint8 { // branch on carry set
-	if olc.GetFlag(FLAG_C) == 1 {
+	if olc.getFlag(FLAG_C) == 1 {
 		olc.cycles++
 
 		olc.addrAbs = olc.pc + olc.addrRel
@@ -123,7 +138,7 @@ func (olc *Olc6502) BCS() uint8 { // branch on carry set
 }
 
 func (olc *Olc6502) BEQ() uint8 { // branch on equal (zero set)
-	if olc.GetFlag(FLAG_Z) == 1 {
+	if olc.getFlag(FLAG_Z) == 1 {
 		olc.cycles++
 
 		olc.addrAbs = olc.pc + olc.addrRel
@@ -138,11 +153,19 @@ func (olc *Olc6502) BEQ() uint8 { // branch on equal (zero set)
 }
 
 func (olc *Olc6502) BIT() uint8 { // bit test
+	olc.fetch()
+
+	tmp := olc.a & olc.fetched
+
+	olc.setFlag(FLAG_Z, (tmp&0x00FF) == 0)
+	olc.setFlag(FLAG_N, olc.fetched&(1<<7) != 0)
+	olc.setFlag(FLAG_V, olc.fetched&(1<<6) != 0)
+
 	return 0
 }
 
 func (olc *Olc6502) BMI() uint8 { // branch on minus (negative set)
-	if olc.GetFlag(FLAG_N) == 1 {
+	if olc.getFlag(FLAG_N) == 1 {
 		olc.cycles++
 
 		olc.addrAbs = olc.pc + olc.addrRel
@@ -157,7 +180,7 @@ func (olc *Olc6502) BMI() uint8 { // branch on minus (negative set)
 }
 
 func (olc *Olc6502) BNE() uint8 { // branch on not equal (zero clear)
-	if olc.GetFlag(FLAG_Z) == 0 {
+	if olc.getFlag(FLAG_Z) == 0 {
 		olc.cycles++
 
 		olc.addrAbs = olc.pc + olc.addrRel
@@ -172,7 +195,7 @@ func (olc *Olc6502) BNE() uint8 { // branch on not equal (zero clear)
 }
 
 func (olc *Olc6502) BPL() uint8 { // branch on plus (negative clear)
-	if olc.GetFlag(FLAG_N) == 0 {
+	if olc.getFlag(FLAG_N) == 0 {
 		olc.cycles++
 
 		olc.addrAbs = olc.pc + olc.addrRel
@@ -187,11 +210,26 @@ func (olc *Olc6502) BPL() uint8 { // branch on plus (negative clear)
 }
 
 func (olc *Olc6502) BRK() uint8 { // break / interrupt
+	olc.pc++
+
+	olc.setFlag(FLAG_I, true)
+	olc.write(0x0100+uint16(olc.stkp), uint8((olc.pc>>8)&0x00FF))
+	olc.stkp--
+	olc.write(0x0100+uint16(olc.stkp), uint8(olc.pc&0x00FF))
+	olc.stkp--
+
+	olc.setFlag(FLAG_B, true)
+	olc.write(0x0100+uint16(olc.stkp), olc.status)
+	olc.stkp--
+	olc.setFlag(FLAG_B, false)
+
+	olc.pc = uint16(olc.read(0xFFFE)) | (uint16(olc.read(0xFFFF)) << 8)
+
 	return 0
 }
 
 func (olc *Olc6502) BVC() uint8 { // branch on overflow clear
-	if olc.GetFlag(FLAG_V) == 0 {
+	if olc.getFlag(FLAG_V) == 0 {
 		olc.cycles++
 
 		olc.addrAbs = olc.pc + olc.addrRel
@@ -206,7 +244,7 @@ func (olc *Olc6502) BVC() uint8 { // branch on overflow clear
 }
 
 func (olc *Olc6502) BVS() uint8 { // branch on overflow set
-	if olc.GetFlag(FLAG_V) == 1 {
+	if olc.getFlag(FLAG_V) == 1 {
 		olc.cycles++
 
 		olc.addrAbs = olc.pc + olc.addrRel
@@ -221,74 +259,151 @@ func (olc *Olc6502) BVS() uint8 { // branch on overflow set
 }
 
 func (olc *Olc6502) CLC() uint8 { // clear carry
-	olc.SetFlag(FLAG_C, false)
+	olc.setFlag(FLAG_C, false)
 
 	return 0
 }
 
 func (olc *Olc6502) CLD() uint8 { // clear decimal
-	olc.SetFlag(FLAG_D, false)
+	olc.setFlag(FLAG_D, false)
 
 	return 0
 }
 
 func (olc *Olc6502) CLI() uint8 { // clear interrupt disable
-	olc.SetFlag(FLAG_I, false)
+	olc.setFlag(FLAG_I, false)
 
 	return 0
 }
 
 func (olc *Olc6502) CLV() uint8 { // clear overflow
-	olc.SetFlag(FLAG_V, false)
+	olc.setFlag(FLAG_V, false)
 
 	return 0
 }
 
 func (olc *Olc6502) CMP() uint8 { // compare (with accumulator)
-	return 0
+	olc.fetch()
+
+	tmp := olc.a - olc.fetched
+
+	olc.setFlag(FLAG_C, olc.a >= olc.fetched)
+	olc.setFlag(FLAG_Z, (tmp&0x00FF) == 0x0000)
+	olc.setFlag(FLAG_N, (tmp&0x0080) != 0)
+
+	return 1
 }
 
 func (olc *Olc6502) CPX() uint8 { // compare with X
+	olc.fetch()
+
+	tmp := olc.x - olc.fetched
+
+	olc.setFlag(FLAG_C, olc.x >= olc.fetched)
+	olc.setFlag(FLAG_Z, (tmp&0x00FF) == 0x0000)
+	olc.setFlag(FLAG_N, (tmp&0x0080) != 0)
+
 	return 0
 }
 
 func (olc *Olc6502) CPY() uint8 { // compare with Y
+	olc.fetch()
+
+	tmp := olc.y - olc.fetched
+
+	olc.setFlag(FLAG_C, olc.y >= olc.fetched)
+	olc.setFlag(FLAG_Z, (tmp&0x00FF) == 0x0000)
+	olc.setFlag(FLAG_N, (tmp&0x0080) != 0)
+
 	return 0
 }
 
 func (olc *Olc6502) DEC() uint8 { // decrement
+	olc.fetch()
+
+	tmp := olc.fetched - 1
+
+	olc.write(olc.addrAbs, tmp&0x00FF)
+
+	olc.setFlag(FLAG_Z, (tmp&0x00FF) == 0)
+	olc.setFlag(FLAG_N, (tmp&0x0080) != 0)
+
 	return 0
 }
 
 func (olc *Olc6502) DEX() uint8 { // decrement X
+	olc.x--
+	olc.setFlag(FLAG_Z, olc.x == 0x00)
+	olc.setFlag(FLAG_N, (olc.x&0x80) != 0)
+
 	return 0
 }
 
 func (olc *Olc6502) DEY() uint8 { // decrement Y
+	olc.y--
+	olc.setFlag(FLAG_Z, olc.y == 0x00)
+	olc.setFlag(FLAG_N, (olc.y&0x80) != 0)
+
 	return 0
 }
 
 func (olc *Olc6502) EOR() uint8 { // exclusive or (with accumulator)
-	return 0
+	olc.fetch()
+
+	olc.a = olc.a ^ olc.fetched
+
+	olc.setFlag(FLAG_Z, olc.a == 0)
+	olc.setFlag(FLAG_N, (olc.a&0x80) != 0)
+
+	return 1
 }
 
 func (olc *Olc6502) INC() uint8 { // increment
+	olc.fetch()
+
+	tmp := olc.fetched + 1
+
+	olc.write(olc.addrAbs, tmp&0x00FF)
+	olc.setFlag(FLAG_Z, (tmp&0x00FF) == 0)
+	olc.setFlag(FLAG_N, (tmp&0x0080) != 0)
+
 	return 0
 }
 
 func (olc *Olc6502) INX() uint8 { // increment X
+	olc.x++
+
+	olc.setFlag(FLAG_Z, olc.x == 0)
+	olc.setFlag(FLAG_N, (olc.x&0x80) != 0)
+
 	return 0
 }
 
 func (olc *Olc6502) INY() uint8 { // increment Y
+	olc.y++
+
+	olc.setFlag(FLAG_Z, olc.y == 0)
+	olc.setFlag(FLAG_N, (olc.y&0x80) != 0)
+
 	return 0
 }
 
 func (olc *Olc6502) JMP() uint8 { // jump
+    olc.pc = olc.addrAbs
+
 	return 0
 }
 
 func (olc *Olc6502) JSR() uint8 { // jump subroutine
+    olc.pc--;
+
+	olc.write(0x0100 + uint16(olc.stkp), uint8((olc.pc >> 8) & 0x00FF))
+	olc.stkp--;
+	olc.write(0x0100 + uint16(olc.stkp), uint8(olc.pc & 0x00FF))
+	olc.stkp--;
+
+	olc.pc = olc.addrAbs;
+
 	return 0
 }
 
@@ -317,8 +432,8 @@ func (olc *Olc6502) ORA() uint8 { // or with accumulator
 }
 
 func (olc *Olc6502) PHA() uint8 { // push accumulator
-    olc.Write(0x0100 + uint16(olc.stkp), olc.a)
-    olc.stkp--
+	olc.write(0x0100+uint16(olc.stkp), olc.a)
+	olc.stkp--
 
 	return 0
 }
@@ -328,11 +443,11 @@ func (olc *Olc6502) PHP() uint8 { // push processor status (SR)
 }
 
 func (olc *Olc6502) PLA() uint8 { // pull accumulator
-    olc.stkp++
-    olc.a = olc.Read(0x0100 + uint16(olc.stkp))
+	olc.stkp++
+	olc.a = olc.read(0x0100 + uint16(olc.stkp))
 
-    olc.SetFlag(FLAG_Z, olc.a == 0)
-    olc.SetFlag(FLAG_N, olc.a & 0x80 != 0)
+	olc.setFlag(FLAG_Z, olc.a == 0)
+	olc.setFlag(FLAG_N, olc.a&0x80 != 0)
 
 	return 0
 }
@@ -350,6 +465,17 @@ func (olc *Olc6502) ROR() uint8 { // rotate right
 }
 
 func (olc *Olc6502) RTI() uint8 { // return from interrupt
+	olc.stkp++
+
+	olc.status = olc.read(0x0100 + uint16(olc.stkp))
+	olc.status &= ^FLAG_B
+	olc.status &= ^FLAG_U
+
+	olc.stkp++
+	olc.pc = uint16(olc.read(0x0100 + uint16(olc.stkp)))
+	olc.stkp++
+	olc.pc |= uint16(olc.read(0x0100+uint16(olc.stkp))) << 8
+
 	return 0
 }
 
@@ -358,15 +484,15 @@ func (olc *Olc6502) RTS() uint8 { // return from subroutine
 }
 
 func (olc *Olc6502) SBC() uint8 { // subtract with carry
-	olc.Fetch()
+	olc.fetch()
 
 	value := uint16(olc.fetched) ^ 0x00FF
-	tmp := uint16(olc.a) + value + uint16(olc.GetFlag(FLAG_C))
+	tmp := uint16(olc.a) + value + uint16(olc.getFlag(FLAG_C))
 
-	olc.SetFlag(FLAG_C, tmp&0xFF00 != 0)
-	olc.SetFlag(FLAG_Z, tmp&0x00FF == 0)
-	olc.SetFlag(FLAG_V, (tmp^uint16(olc.a)&(tmp^value))&0x0080 != 0)
-	olc.SetFlag(FLAG_N, tmp&0x0080 != 0)
+	olc.setFlag(FLAG_C, tmp&0xFF00 != 0)
+	olc.setFlag(FLAG_Z, tmp&0x00FF == 0)
+	olc.setFlag(FLAG_V, (tmp^uint16(olc.a)&(tmp^value))&0x0080 != 0)
+	olc.setFlag(FLAG_N, tmp&0x0080 != 0)
 
 	olc.a = uint8(tmp & 0x00FF)
 

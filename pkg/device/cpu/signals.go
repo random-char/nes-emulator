@@ -2,7 +2,7 @@ package cpu
 
 func (olc *Olc6502) Clock() {
 	if olc.cycles == 0 {
-		opcode := olc.Read(olc.pc)
+		opcode := olc.read(olc.pc)
 		olc.pc++
 
 		olc.cycles = lookup[opcode].Cycles
@@ -25,8 +25,8 @@ func (olc *Olc6502) Reset() {
 
 	olc.addrAbs = 0xFFFC
 
-	lo := uint16(olc.Read(olc.addrAbs))
-	hi := uint16(olc.Read(olc.addrAbs + 1))
+	lo := uint16(olc.read(olc.addrAbs))
+	hi := uint16(olc.read(olc.addrAbs + 1))
 
 	olc.pc = (hi << 8) | lo
 
@@ -38,31 +38,31 @@ func (olc *Olc6502) Reset() {
 }
 
 func (olc *Olc6502) Irq() {
-	if olc.GetFlag(FLAG_I) == 1 {
+	if olc.getFlag(FLAG_I) == 1 {
 		return
 	}
 
-	olc.Write(
+	olc.write(
 		0x0100+uint16(olc.stkp),
 		uint8((olc.pc>>8)&0x00FF),
 	)
     olc.stkp--
 
-	olc.Write(
+	olc.write(
 		0x0100+uint16(olc.stkp),
 		uint8(olc.pc&0x00FF),
 	)
     olc.stkp--
 
-    olc.SetFlag(FLAG_B, false)
-    olc.SetFlag(FLAG_U, true)
-    olc.SetFlag(FLAG_I, true)
-    olc.Write(0x0100 + uint16(olc.stkp), olc.status)
+    olc.setFlag(FLAG_B, false)
+    olc.setFlag(FLAG_U, true)
+    olc.setFlag(FLAG_I, true)
+    olc.write(0x0100 + uint16(olc.stkp), olc.status)
     olc.stkp--
 
     olc.addrAbs = 0xFFFE
-    lo := uint16(olc.Read(olc.addrAbs))
-    hi := uint16(olc.Read(olc.addrAbs+1))
+    lo := uint16(olc.read(olc.addrAbs))
+    hi := uint16(olc.read(olc.addrAbs+1))
 
     olc.pc = (hi << 8) | lo
 
@@ -70,27 +70,27 @@ func (olc *Olc6502) Irq() {
 }
 
 func (olc *Olc6502) Nmi() {
-	olc.Write(
+	olc.write(
 		0x0100+uint16(olc.stkp),
 		uint8((olc.pc>>8)&0x00FF),
 	)
     olc.stkp--
 
-	olc.Write(
+	olc.write(
 		0x0100+uint16(olc.stkp),
 		uint8(olc.pc&0x00FF),
 	)
     olc.stkp--
 
-    olc.SetFlag(FLAG_B, false)
-    olc.SetFlag(FLAG_U, true)
-    olc.SetFlag(FLAG_I, true)
-    olc.Write(0x0100 + uint16(olc.stkp), olc.status)
+    olc.setFlag(FLAG_B, false)
+    olc.setFlag(FLAG_U, true)
+    olc.setFlag(FLAG_I, true)
+    olc.write(0x0100 + uint16(olc.stkp), olc.status)
     olc.stkp--
 
     olc.addrAbs = 0xFFFA
-    lo := uint16(olc.Read(olc.addrAbs))
-    hi := uint16(olc.Read(olc.addrAbs+1))
+    lo := uint16(olc.read(olc.addrAbs))
+    hi := uint16(olc.read(olc.addrAbs+1))
 
     olc.pc = (hi << 8) | lo
 

@@ -60,15 +60,15 @@ func New(bus devices.Bus) *Olc6502 {
 	return olc
 }
 
-func (olc *Olc6502) Read(addr uint16) uint8 {
+func (olc *Olc6502) read(addr uint16) uint8 {
 	return olc.bus.Read(addr, true)
 }
 
-func (olc *Olc6502) Write(addr uint16, data uint8) {
+func (olc *Olc6502) write(addr uint16, data uint8) {
 	olc.bus.Write(addr, data)
 }
 
-func (olc *Olc6502) SetFlag(flag uint8, value bool) {
+func (olc *Olc6502) setFlag(flag uint8, value bool) {
 	if value {
 		olc.status |= flag
 	} else {
@@ -76,7 +76,7 @@ func (olc *Olc6502) SetFlag(flag uint8, value bool) {
 	}
 }
 
-func (olc *Olc6502) GetFlag(flag uint8) uint8 {
+func (olc *Olc6502) getFlag(flag uint8) uint8 {
 	if olc.status&flag > 0 {
 		return 1
 	} else {
@@ -84,10 +84,10 @@ func (olc *Olc6502) GetFlag(flag uint8) uint8 {
 	}
 }
 
-func (olc *Olc6502) Fetch() uint8 {
+func (olc *Olc6502) fetch() uint8 {
 	// can't compare functions
 	if lookup[olc.opcode].AddrModeName != ADDR_MODE_IMP {
-		olc.fetched = olc.Read(olc.addrAbs)
+		olc.fetched = olc.read(olc.addrAbs)
 	}
 
 	return olc.fetched
