@@ -1,98 +1,98 @@
 package cpu
 
-func (olc *Olc6502) Clock() {
-	if olc.cycles == 0 {
-		opcode := olc.read(olc.pc)
-		olc.pc++
+func (cpu *Olc6502) Clock() {
+	if cpu.cycles == 0 {
+		opcode := cpu.read(cpu.pc)
+		cpu.pc++
 
-		olc.cycles = lookup[opcode].Cycles
-		additionalCycle1 := lookup[opcode].AddressMode()
-		additionalCycle2 := lookup[opcode].Operation()
+		cpu.cycles = lookup[opcode].Cycles
+		additionalCycle1 := lookup[opcode].AddrMode()
+		additionalCycle2 := lookup[opcode].Op()
 
-		olc.cycles += (additionalCycle1 & additionalCycle2)
+		cpu.cycles += (additionalCycle1 & additionalCycle2)
 	}
 
-	olc.cycles--
+	cpu.cycles--
 }
 
-func (olc *Olc6502) Reset() {
-	olc.a = 0
-	olc.x = 0
-	olc.y = 0
+func (cpu *Olc6502) Reset() {
+	cpu.a = 0
+	cpu.x = 0
+	cpu.y = 0
 
-	olc.stkp = 0xFD
-	olc.status = 0x00 | FLAG_U
+	cpu.stkp = 0xFD
+	cpu.status = 0x00 | FLAG_U
 
-	olc.addrAbs = 0xFFFC
+	cpu.addrAbs = 0xFFFC
 
-	lo := uint16(olc.read(olc.addrAbs))
-	hi := uint16(olc.read(olc.addrAbs + 1))
+	lo := uint16(cpu.read(cpu.addrAbs))
+	hi := uint16(cpu.read(cpu.addrAbs + 1))
 
-	olc.pc = (hi << 8) | lo
+	cpu.pc = (hi << 8) | lo
 
-	olc.addrRel = 0
-	olc.addrAbs = 0
-	olc.fetched = 0
+	cpu.addrRel = 0
+	cpu.addrAbs = 0
+	cpu.fetched = 0
 
-	olc.cycles = 8
+	cpu.cycles = 8
 }
 
-func (olc *Olc6502) Irq() {
-	if olc.getFlag(FLAG_I) == 1 {
+func (cpu *Olc6502) Irq() {
+	if cpu.getFlag(FLAG_I) == 1 {
 		return
 	}
 
-	olc.write(
-		0x0100+uint16(olc.stkp),
-		uint8((olc.pc>>8)&0x00FF),
+	cpu.write(
+		0x0100+uint16(cpu.stkp),
+		uint8((cpu.pc>>8)&0x00FF),
 	)
-    olc.stkp--
+    cpu.stkp--
 
-	olc.write(
-		0x0100+uint16(olc.stkp),
-		uint8(olc.pc&0x00FF),
+	cpu.write(
+		0x0100+uint16(cpu.stkp),
+		uint8(cpu.pc&0x00FF),
 	)
-    olc.stkp--
+    cpu.stkp--
 
-    olc.setFlag(FLAG_B, false)
-    olc.setFlag(FLAG_U, true)
-    olc.setFlag(FLAG_I, true)
-    olc.write(0x0100 + uint16(olc.stkp), olc.status)
-    olc.stkp--
+    cpu.setFlag(FLAG_B, false)
+    cpu.setFlag(FLAG_U, true)
+    cpu.setFlag(FLAG_I, true)
+    cpu.write(0x0100 + uint16(cpu.stkp), cpu.status)
+    cpu.stkp--
 
-    olc.addrAbs = 0xFFFE
-    lo := uint16(olc.read(olc.addrAbs))
-    hi := uint16(olc.read(olc.addrAbs+1))
+    cpu.addrAbs = 0xFFFE
+    lo := uint16(cpu.read(cpu.addrAbs))
+    hi := uint16(cpu.read(cpu.addrAbs+1))
 
-    olc.pc = (hi << 8) | lo
+    cpu.pc = (hi << 8) | lo
 
-    olc.cycles = 7
+    cpu.cycles = 7
 }
 
-func (olc *Olc6502) Nmi() {
-	olc.write(
-		0x0100+uint16(olc.stkp),
-		uint8((olc.pc>>8)&0x00FF),
+func (cpu *Olc6502) Nmi() {
+	cpu.write(
+		0x0100+uint16(cpu.stkp),
+		uint8((cpu.pc>>8)&0x00FF),
 	)
-    olc.stkp--
+    cpu.stkp--
 
-	olc.write(
-		0x0100+uint16(olc.stkp),
-		uint8(olc.pc&0x00FF),
+	cpu.write(
+		0x0100+uint16(cpu.stkp),
+		uint8(cpu.pc&0x00FF),
 	)
-    olc.stkp--
+    cpu.stkp--
 
-    olc.setFlag(FLAG_B, false)
-    olc.setFlag(FLAG_U, true)
-    olc.setFlag(FLAG_I, true)
-    olc.write(0x0100 + uint16(olc.stkp), olc.status)
-    olc.stkp--
+    cpu.setFlag(FLAG_B, false)
+    cpu.setFlag(FLAG_U, true)
+    cpu.setFlag(FLAG_I, true)
+    cpu.write(0x0100 + uint16(cpu.stkp), cpu.status)
+    cpu.stkp--
 
-    olc.addrAbs = 0xFFFA
-    lo := uint16(olc.read(olc.addrAbs))
-    hi := uint16(olc.read(olc.addrAbs+1))
+    cpu.addrAbs = 0xFFFA
+    lo := uint16(cpu.read(cpu.addrAbs))
+    hi := uint16(cpu.read(cpu.addrAbs+1))
 
-    olc.pc = (hi << 8) | lo
+    cpu.pc = (hi << 8) | lo
 
-    olc.cycles = 8
+    cpu.cycles = 8
 }

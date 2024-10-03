@@ -1,25 +1,11 @@
 package cpu
 
-import "nes-emulator/pkg/device"
-
-const (
-	FLAG_C = uint8(1 << 0) // carry bit
-	FLAG_Z = uint8(1 << 1) // zero
-	FLAG_I = uint8(1 << 2) // disable interrupts
-	FLAG_D = uint8(1 << 3) // decimal mode
-	FLAG_B = uint8(1 << 4) // break
-	FLAG_U = uint8(1 << 5) // unused
-	FLAG_V = uint8(1 << 6) // overflow
-	FLAG_N = uint8(1 << 7) // negative
-)
-
-var lookup []Instruction
-
 type Olc6502 struct {
 	//registers
-	a      uint8  // accumulator
-	x      uint8  // x
-	y      uint8  // y
+	a uint8 // accumulator
+	x uint8 // x
+	y uint8 // y
+
 	stkp   uint8  // stack pointer
 	pc     uint16 // program counter
 	status uint8  // status
@@ -32,11 +18,11 @@ type Olc6502 struct {
 	opcode uint8
 	cycles uint8
 
-	bus devices.Bus
+	bus bus
 }
 
-func New(bus devices.Bus) *Olc6502 {
-	olc := &Olc6502{
+func New(bus bus) *Olc6502 {
+	cpu := &Olc6502{
 		a:      0,
 		x:      0,
 		y:      0,
@@ -55,40 +41,16 @@ func New(bus devices.Bus) *Olc6502 {
 		bus: bus,
 	}
 
-	lookup = newLookupFor(olc)
+	initLookupFor(cpu)
 
-	return olc
+	return cpu
 }
 
-func (olc *Olc6502) read(addr uint16) uint8 {
-	return olc.bus.Read(addr, true)
-}
-
-func (olc *Olc6502) write(addr uint16, data uint8) {
-	olc.bus.Write(addr, data)
-}
-
-func (olc *Olc6502) setFlag(flag uint8, value bool) {
-	if value {
-		olc.status |= flag
-	} else {
-		olc.status &= ^flag
-	}
-}
-
-func (olc *Olc6502) getFlag(flag uint8) uint8 {
-	if olc.status&flag > 0 {
-		return 1
-	} else {
-		return 0
-	}
-}
-
-func (olc *Olc6502) fetch() uint8 {
+func (cpu *Olc6502) fetch() uint8 {
 	// can't compare functions
-	if lookup[olc.opcode].AddrModeName != ADDR_MODE_IMP {
-		olc.fetched = olc.read(olc.addrAbs)
+	if lookup[cpu.opcode].AMName != ADDR_MODE_IMP {
+		cpu.fetched = cpu.read(cpu.addrAbs)
 	}
 
-	return olc.fetched
+	return cpu.fetched
 }
