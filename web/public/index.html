@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title></title>
+    <link href="/assets/css/main.css" rel="stylesheet" />
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/wasm_exec.js"></script>
+  </head>
+  <body>
+    <canvas id="canvas" width="256" height="240" />
+  </body>
+
+  <script>
+    const go = new Go();
+    WebAssembly.instantiateStreaming(fetch("/assets/wasm/nes.wasm"), go.importObject).then(
+      (result) => {
+        go.run(result.instance);
+      },
+    );
+  </script>
+</html>
