@@ -1,43 +1,51 @@
 package cartridge
 
 import (
-	"encoding/binary"
 	"io"
 	"nes-emulator/pkg/mapper"
 )
 
-func Load(rsc io.ReadSeeker) (*Cartridge, error) {
-	header := ReadHeader(rsc)
+func load(rsc io.ReadSeeker) (*Cartridge, error) {
+	header := loadHeader(rsc)
 
 	if (header.Mapper1 & 0x04) != 0 {
 		// reserved for trainers, ignore for now
-		rsc.Seek(512, 1)
+		rsc.Seek(512, io.SeekCurrent)
 	}
 
 	nMapperID := ((header.Mapper2 >> 4) << 4) | (header.Mapper1 >> 4)
+	mirror := horizontal
+	if (header.Mapper1 & 0x01) != 0 {
+		mirror = vertical
+	}
 
 	var nFileType uint8 = 1
 	var nPRGBanks uint8 = 0
 	var nCHRBanks uint8 = 0
 
-	vPRGMemory := make([]uint8, 0)
-	vCHRMemory := make([]uint8, 0)
+	var vPRGMemory, vCHRMemory []uint8
 
 	switch nFileType {
-	case 0:
-		break
 	case 1:
 		nPRGBanks = header.PRGRomChunks
-		vPRGMemory = make([]uint8, uint(nPRGBanks)*16384)
-		binary.Read(rsc, binary.LittleEndian, &vPRGMemory)
+		vPRGMemory = make([]uint8, uint(nPRGBanks)*0x4000)
+
+		if _, err := io.ReadFull(rsc, vPRGMemory); err != nil {
+			panic(err)
+		}
 
 		nCHRBanks = header.CHRRomChunks
-		vCHRMemory = make([]uint8, uint(nCHRBanks)*8192)
-		binary.Read(rsc, binary.LittleEndian, &vCHRMemory)
+		length := uint(nCHRBanks) * 0x2000
+		if length == 0 {
+			length = 0x2000
+		}
+		vCHRMemory = make([]uint8, length)
 
-		break
-	case 2:
-		break
+		if _, err := io.ReadFull(rsc, vCHRMemory); err != nil {
+			panic(err)
+		}
+	default:
+		panic("Unsupported nFileType")
 	}
 
 	return &Cartridge{
@@ -47,6 +55,7 @@ func Load(rsc io.ReadSeeker) (*Cartridge, error) {
 		nMapperID: nMapperID,
 		nPRGBanks: nPRGBanks,
 		nCHRBanks: nCHRBanks,
+		mirror:    mirror,
 
 		mapper: mapper.CreateMapper(nMapperID, nPRGBanks, nCHRBanks),
 	}, nil

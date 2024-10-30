@@ -1,4 +1,4 @@
-package ppu
+package visuals
 
 type Pixel struct {
 	R uint8
@@ -6,7 +6,7 @@ type Pixel struct {
 	B uint8
 }
 
-func newPixel(r, g, b uint8) *Pixel {
+func NewPixel(r, g, b uint8) *Pixel {
 	return &Pixel{
 		R: r,
 		G: g,

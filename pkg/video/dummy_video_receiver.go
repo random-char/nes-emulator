@@ -1,9 +1,7 @@
 package video
 
-import "nes-emulator/pkg/ppu"
+import "nes-emulator/pkg/ppu/visuals"
 
 type DummyVideoReceiver struct{}
 
-func (*DummyVideoReceiver) SetPixel(int16, int16, *ppu.Pixel) {}
-
-func (*DummyVideoReceiver) DrawFrame() {}
+func (*DummyVideoReceiver) RenderFrame([]*visuals.Pixel) {}

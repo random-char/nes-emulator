@@ -3,16 +3,17 @@ package nes
 import (
 	"nes-emulator/pkg/cartridge"
 	"nes-emulator/pkg/cpu"
+	"nes-emulator/pkg/debugger"
 	"nes-emulator/pkg/ppu"
 	"time"
 )
 
 type NES struct {
-	cpu       *cpu.Olc6502
-	ppu       *ppu.Olc2c02
+	cpu       *cpu.MOSTechnology6502
+	ppu       *ppu.Ricoh2c02
 	cartridge *cartridge.Cartridge
 
-	cpuRam []uint8
+	cpuRam [2048]uint8
 
 	running             bool
 	nSystemClockCounter int
@@ -21,44 +22,19 @@ type NES struct {
 
 func New(
 	receiver ppu.VideoReceiver,
+	debugReceiver ppu.DebugReceiver,
+	debugger *debugger.Debugger,
 ) *NES {
 	nes := &NES{
-		cpuRam: make([]uint8, 2048),
-
 		running:             false,
 		nSystemClockCounter: 0,
 		stopChan:            make(chan struct{}),
 	}
 
-	nes.cpu = cpu.New(nes)
-	nes.ppu = ppu.New(receiver)
+	nes.cpu = cpu.New(nes, debugger)
+	nes.ppu = ppu.New(receiver, debugReceiver)
 
 	return nes
-}
-
-func (nes *NES) CpuRead(addr uint16, readOnly bool) uint8 {
-	var data uint8 = 0
-
-	_, fromCartridge := nes.cartridge.CpuRead(addr, readOnly)
-	if fromCartridge {
-		// allow extension via cartridge
-	} else if addr >= 0 && addr <= 0x1FFF {
-		data = nes.cpuRam[addr&0x07FF]
-	} else if addr >= 0x2000 && addr <= 0x3FFF {
-		nes.ppu.CpuRead(addr&0x0007, readOnly)
-	}
-
-	return data
-}
-
-func (nes *NES) CpuWrite(addr uint16, data uint8) {
-	if nes.cartridge.CpuWrite(addr, data) {
-		// allow extension via cartridge
-	} else if addr >= 0 && addr <= 0x1FFF {
-		nes.cpuRam[addr&0x07FF] = data
-	} else if addr >= 0x2000 && addr <= 0x3FFF {
-		nes.ppu.CpuWrite(addr&0x0007, data)
-	}
 }
 
 func (nes *NES) InsertCartridge(cartridge *cartridge.Cartridge) {
@@ -68,6 +44,12 @@ func (nes *NES) InsertCartridge(cartridge *cartridge.Cartridge) {
 
 func (nes *NES) Reset() {
 	nes.cpu.Reset()
+	nes.ppu.Reset()
+
+	if nes.cartridge != nil {
+		nes.cartridge.Reset()
+	}
+
 	nes.nSystemClockCounter = 0
 }
 
@@ -78,7 +60,19 @@ func (nes *NES) Clock() {
 		nes.cpu.Clock()
 	}
 
+	if nes.ppu.Nmi {
+		nes.ppu.Nmi = false
+		nes.cpu.Nmi()
+	}
+
 	nes.nSystemClockCounter++
+}
+
+func (nes *NES) Frame() {
+	for !nes.ppu.FrameRendered {
+		nes.Clock()
+	}
+	nes.ppu.FrameRendered = false
 }
 
 func (nes *NES) Start() {
@@ -88,18 +82,17 @@ func (nes *NES) Start() {
 
 	nes.running = true
 
-	ticker := time.NewTicker(46 * time.Nanosecond)
-	for {
-		select {
-		case <-ticker.C:
-			nes.Clock()
-			break
-		case <-nes.stopChan:
-			return
-		default:
-			time.Sleep(5 * time.Nanosecond)
+	ticker := time.NewTicker(100 * time.Nanosecond)
+	go func(ticker *time.Ticker) {
+		for {
+			select {
+			case <-ticker.C:
+				nes.Frame()
+			case <-nes.stopChan:
+				return
+			}
 		}
-	}
+	}(ticker)
 }
 
 func (nes *NES) Stop() {

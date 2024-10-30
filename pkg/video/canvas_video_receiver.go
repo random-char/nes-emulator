@@ -4,49 +4,90 @@
 package video
 
 import (
-	"nes-emulator/pkg/ppu"
+	"nes-emulator/pkg/ppu/visuals"
 	"syscall/js"
 )
 
-type CanvasVideoReceiver struct {
-	ctx js.Value
+const (
+	gameWidth  = 256
+	gameHeight = 240
 
-	pixels [][]*ppu.Pixel
+	debugWidth  = 128
+	debugHeight = 256
+)
+
+type CanvasVideoReceiver struct {
+	ctx     js.Value
+	imgData js.Value
+
+	debugCtx     js.Value
+	debugImgData js.Value
 }
 
-func NewCanvasVideoReceiver(canvas js.Value) *CanvasVideoReceiver {
+func NewCanvasVideoReceiver(
+	canvas js.Value,
+	debugCanvas js.Value,
+) *CanvasVideoReceiver {
 	ctx := canvas.Call(
 		"getContext",
-		"webgl",
+		"2d",
 	)
 
-	ctx.Call("clearColor", 0.0, 0.0, 0.0, 1.0)
-	ctx.Call("clear", ctx.Get("COLOR_BUFFER_BIT"))
-
-	pixels := make([][]*ppu.Pixel, 341)
-	for i := 0; i < 341; i++ {
-		pixels[i] = make([]*ppu.Pixel, 261)
-	}
+	debugCtx := debugCanvas.Call(
+		"getContext",
+		"2d",
+	)
 
 	return &CanvasVideoReceiver{
-		ctx:    ctx,
-		pixels: pixels,
+		ctx:     ctx,
+		imgData: ctx.Call("createImageData", gameWidth, gameHeight),
+
+		debugCtx:     debugCtx,
+		debugImgData: debugCtx.Call("createImageData", debugWidth, debugHeight),
 	}
 }
 
-func (cvr *CanvasVideoReceiver) SetPixel(x, y int16, pixel *ppu.Pixel) {
-	if y < 0 {
-		return
+func (cvr *CanvasVideoReceiver) RenderFrame(pixels []*visuals.Pixel) {
+	data := cvr.imgData.Get("data")
+
+	currentIndex := 0
+	for _, p := range pixels {
+		data.SetIndex(currentIndex, p.R)
+		data.SetIndex(currentIndex+1, p.G)
+		data.SetIndex(currentIndex+2, p.B)
+		data.SetIndex(currentIndex+3, 255)
+		currentIndex += 4
 	}
 
-	cvr.pixels[x][y] = pixel
+	cvr.ctx.Call(
+		"putImageData",
+		cvr.imgData,
+		0, 0,
+	)
 }
 
-func (cvr *CanvasVideoReceiver) DrawFrame() {
-	// var pixel *ppu.Pixel
-	// for x := 0; x < 341; x++ {
-	// 	for y := 0; y < 261; y++ {
-	// 		pixel = cvr.pixels[x][y]
-	// 	}
-	// }
+func (cvr *CanvasVideoReceiver) RenderPatternTables(i int, sprite *visuals.Sprite) {
+	data := cvr.debugImgData.Get("data")
+
+	var p *visuals.Pixel
+	currentIndex := i*(128*128)
+	var x, y int16
+	for x = 0; x < sprite.GetWidth(); x++ {
+		for y = 0; y < sprite.GetHeight(); y++ {
+			p = sprite.GetPixel(x, y)
+
+			data.SetIndex(currentIndex, p.R)
+			data.SetIndex(currentIndex+1, p.G)
+			data.SetIndex(currentIndex+2, p.B)
+			data.SetIndex(currentIndex+3, 255)
+
+			currentIndex += 4
+		}
+	}
+
+	cvr.debugCtx.Call(
+		"putImageData",
+		cvr.debugImgData,
+		0, 0,
+	)
 }

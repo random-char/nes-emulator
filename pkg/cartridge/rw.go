@@ -1,6 +1,6 @@
 package cartridge
 
-func (c *Cartridge) CpuRead(addr uint16, readOnly bool) (uint8, bool) {
+func (c *Cartridge) CpuRead(addr uint16) (uint8, bool) {
 	var data uint8 = 0
 
 	mappedAddr, fromCartridge := c.mapper.CpuMapRead(addr)
@@ -25,7 +25,7 @@ func (c *Cartridge) PpuRead(addr uint16) (uint8, bool) {
 
 	mappedAddr, fromCartridge := c.mapper.PpuMapRead(addr)
 	if fromCartridge {
-		data = c.vPRGMemory[mappedAddr]
+		data = c.vCHRMemory[mappedAddr]
 	}
 
 	return data, fromCartridge
