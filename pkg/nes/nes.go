@@ -2,6 +2,7 @@ package nes
 
 import (
 	"nes-emulator/pkg/cartridge"
+	"nes-emulator/pkg/controller"
 	"nes-emulator/pkg/cpu"
 	"nes-emulator/pkg/debugger"
 	"nes-emulator/pkg/ppu"
@@ -13,59 +14,67 @@ type NES struct {
 	ppu       *ppu.Ricoh2c02
 	cartridge *cartridge.Cartridge
 
+	Controller      [2]*controller.Controller
+	controllerState [2]uint8
+
 	cpuRam [2048]uint8
+
+	dmaPage     uint8
+	dmaAddr     uint8
+	dmaData     uint8
+	dmaTransfer bool
+	dmaDummy    bool
 
 	running             bool
 	nSystemClockCounter int
 	stopChan            chan struct{}
 }
 
-func New(
-	receiver ppu.VideoReceiver,
-	debugReceiver ppu.DebugReceiver,
-	debugger *debugger.Debugger,
-) *NES {
+func New() *NES {
 	nes := &NES{
+		dmaPage:     0x00,
+		dmaAddr:     0x00,
+		dmaData:     0x00,
+		dmaTransfer: false,
+		dmaDummy:    true,
+
 		running:             false,
 		nSystemClockCounter: 0,
 		stopChan:            make(chan struct{}),
 	}
 
-	nes.cpu = cpu.New(nes, debugger)
-	nes.ppu = ppu.New(receiver, debugReceiver)
+	nes.Controller[0] = &controller.Controller{}
+	nes.Controller[1] = &controller.Controller{}
+
+	nes.cpu = cpu.New(nes)
+	nes.ppu = ppu.New()
 
 	return nes
 }
 
-func (nes *NES) InsertCartridge(cartridge *cartridge.Cartridge) {
-	nes.cartridge = cartridge
-	nes.ppu.ConnectCartridge(cartridge)
+func (nes *NES) WithVideoReceiver(
+	receiver ppu.VideoReceiver,
+) *NES {
+	nes.ppu.SetVideoReceiver(receiver)
+
+	return nes
 }
 
-func (nes *NES) Reset() {
-	nes.cpu.Reset()
-	nes.ppu.Reset()
+func (nes *NES) WithDebugReceiver(
+	debugReceiver ppu.DebugReceiver,
+) *NES {
+	nes.ppu.SetDebugReceiver(debugReceiver)
 
-	if nes.cartridge != nil {
-		nes.cartridge.Reset()
-	}
-
-	nes.nSystemClockCounter = 0
+	return nes
 }
 
-func (nes *NES) Clock() {
-	nes.ppu.Clock()
+func (nes *NES) WithDebugger(
+	debugger *debugger.Debugger,
+) *NES {
+	nes.cpu.SetDebugger(debugger)
+	nes.ppu.SetDebugger(debugger)
 
-	if nes.nSystemClockCounter%3 == 0 {
-		nes.cpu.Clock()
-	}
-
-	if nes.ppu.Nmi {
-		nes.ppu.Nmi = false
-		nes.cpu.Nmi()
-	}
-
-	nes.nSystemClockCounter++
+	return nes
 }
 
 func (nes *NES) Frame() {
@@ -75,14 +84,18 @@ func (nes *NES) Frame() {
 	nes.ppu.FrameRendered = false
 }
 
-func (nes *NES) Start() {
+func (nes *NES) Start() error {
 	if nes.running {
-		return
+		return AlreadyRunningErr
+	}
+
+	if nes.cartridge == nil {
+		return NoCartridgeErr
 	}
 
 	nes.running = true
 
-	ticker := time.NewTicker(100 * time.Nanosecond)
+	ticker := time.NewTicker(75 * time.Millisecond)
 	go func(ticker *time.Ticker) {
 		for {
 			select {
@@ -93,6 +106,8 @@ func (nes *NES) Start() {
 			}
 		}
 	}(ticker)
+
+	return nil
 }
 
 func (nes *NES) Stop() {

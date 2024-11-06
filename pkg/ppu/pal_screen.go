@@ -1,6 +1,6 @@
 package ppu
 
-import "nes-emulator/pkg/ppu/visuals"
+import "nes-emulator/pkg/visuals"
 
 var palScreen [0x40]*visuals.Pixel = [0x40]*visuals.Pixel{
 	0x00: visuals.NewPixel(84, 84, 84),

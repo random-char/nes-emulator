@@ -4,7 +4,7 @@
 package video
 
 import (
-	"nes-emulator/pkg/ppu/visuals"
+	"nes-emulator/pkg/visuals"
 	"syscall/js"
 )
 
@@ -12,8 +12,8 @@ const (
 	gameWidth  = 256
 	gameHeight = 240
 
-	debugWidth  = 128
-	debugHeight = 256
+	debugWidth  = 256
+	debugHeight = 128
 )
 
 type CanvasVideoReceiver struct {
@@ -66,22 +66,28 @@ func (cvr *CanvasVideoReceiver) RenderFrame(pixels []*visuals.Pixel) {
 	)
 }
 
-func (cvr *CanvasVideoReceiver) RenderPatternTables(i int, sprite *visuals.Sprite) {
+func (cvr *CanvasVideoReceiver) RenderPatternTables(i uint16, sprite *visuals.Sprite) {
 	data := cvr.debugImgData.Get("data")
 
 	var p *visuals.Pixel
-	currentIndex := i*(128*128)
-	var x, y int16
+	var x, y uint16
+	var currentIndex int
+	var err error
+
 	for x = 0; x < sprite.GetWidth(); x++ {
 		for y = 0; y < sprite.GetHeight(); y++ {
-			p = sprite.GetPixel(x, y)
+			p, err = sprite.GetPixel(x, y)
+			if err != nil {
+				continue
+			}
+
+			currentIndex = int(y*debugWidth+x+sprite.GetWidth()*i) * 4
 
 			data.SetIndex(currentIndex, p.R)
 			data.SetIndex(currentIndex+1, p.G)
 			data.SetIndex(currentIndex+2, p.B)
 			data.SetIndex(currentIndex+3, 255)
 
-			currentIndex += 4
 		}
 	}
 

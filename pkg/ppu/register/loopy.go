@@ -1,5 +1,7 @@
 package register
 
+import "nes-emulator/pkg/binary"
+
 type LoopyReg struct {
 	//0_000_0_0_00000_00000
     //| ||| | | ||||| |||||
@@ -28,14 +30,6 @@ func (lr *LoopyReg) SetReg(reg uint16) {
 
 func (lr *LoopyReg) IncrementReg(i uint16) {
     lr.reg += i
-}
-
-func (lr *LoopyReg) getData(dataLen, shift uint8) uint16 {
-	return getRegData(&lr.reg, dataLen, shift)
-}
-
-func (lr *LoopyReg) setData(data uint16, dataLen, shift uint8) {
-	setRegData(&lr.reg, data, dataLen, shift)
 }
 
 func (lr *LoopyReg) GetCorseX() uint16 {
@@ -76,4 +70,12 @@ func (lr *LoopyReg) SetNametableY(nametableY uint16) {
 
 func (lr *LoopyReg) SetFineY(fineY uint16) {
 	lr.setData(fineY, 3, 12)
+}
+
+func (lr *LoopyReg) getData(dataLen, shift uint8) uint16 {
+	return binary.GetData(&lr.reg, dataLen, shift)
+}
+
+func (lr *LoopyReg) setData(data uint16, dataLen, shift uint8) {
+	binary.SetData(&lr.reg, data, dataLen, shift)
 }

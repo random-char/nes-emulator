@@ -15,8 +15,7 @@ const (
 	am_IZY = "IZY"
 )
 
-// checked
-func (cpu *MOSTechnology6502) IMP() uint8 {
+func (cpu *MOSTechnology6502) imp() uint8 {
 	cpu.fetched = cpu.a
 
 	if cpu.debugger != nil {
@@ -27,21 +26,18 @@ func (cpu *MOSTechnology6502) IMP() uint8 {
 	return 0
 }
 
-// checked
-func (cpu *MOSTechnology6502) IMM() uint8 {
+func (cpu *MOSTechnology6502) imm() uint8 {
 	cpu.addrAbs = cpu.pc
 	cpu.pc++
 
 	return 0
 }
 
-// checked
-func (cpu *MOSTechnology6502) ZP0() uint8 {
+func (cpu *MOSTechnology6502) zp0() uint8 {
 	valueRead := cpu.read(cpu.pc)
 	cpu.addrAbs = uint16(valueRead) & 0x00FF
 	cpu.pc++
 
-	//todo recheck
 	if cpu.debugger != nil {
 		cpu.debugger.CpuNumOperands = 1
 		cpu.debugger.CpuOperand1 = valueRead
@@ -50,13 +46,11 @@ func (cpu *MOSTechnology6502) ZP0() uint8 {
 	return 0
 }
 
-// checked
-func (cpu *MOSTechnology6502) ZPX() uint8 {
+func (cpu *MOSTechnology6502) zpx() uint8 {
 	valueRead := cpu.read(cpu.pc)
 	cpu.addrAbs = uint16(valueRead+cpu.x) & 0x00FF
 	cpu.pc++
 
-	//todo recheck
 	if cpu.debugger != nil {
 		cpu.debugger.CpuNumOperands = 1
 		cpu.debugger.CpuOperand1 = valueRead
@@ -65,13 +59,11 @@ func (cpu *MOSTechnology6502) ZPX() uint8 {
 	return 0
 }
 
-// checked
-func (cpu *MOSTechnology6502) ZPY() uint8 {
+func (cpu *MOSTechnology6502) zpy() uint8 {
 	valueRead := cpu.read(cpu.pc)
 	cpu.addrAbs = uint16(valueRead+cpu.y) & 0x00FF
 	cpu.pc++
 
-	//todo recheck
 	if cpu.debugger != nil {
 		cpu.debugger.CpuNumOperands = 1
 		cpu.debugger.CpuOperand1 = valueRead
@@ -80,8 +72,7 @@ func (cpu *MOSTechnology6502) ZPY() uint8 {
 	return 0
 }
 
-// checked
-func (cpu *MOSTechnology6502) REL() uint8 {
+func (cpu *MOSTechnology6502) rel() uint8 {
 	valueRead := cpu.read(cpu.pc)
 	cpu.addrRel = uint16(valueRead)
 	cpu.pc++
@@ -98,8 +89,7 @@ func (cpu *MOSTechnology6502) REL() uint8 {
 	return 0
 }
 
-// checked
-func (cpu *MOSTechnology6502) ABS() uint8 {
+func (cpu *MOSTechnology6502) abs() uint8 {
 	lo := uint16(cpu.read(cpu.pc))
 	cpu.pc++
 
@@ -117,8 +107,7 @@ func (cpu *MOSTechnology6502) ABS() uint8 {
 	return 0
 }
 
-// checked
-func (cpu *MOSTechnology6502) ABX() uint8 {
+func (cpu *MOSTechnology6502) abx() uint8 {
 	lo := uint16(cpu.read(cpu.pc))
 	cpu.pc++
 
@@ -141,8 +130,7 @@ func (cpu *MOSTechnology6502) ABX() uint8 {
 	}
 }
 
-// checked
-func (cpu *MOSTechnology6502) ABY() uint8 {
+func (cpu *MOSTechnology6502) aby() uint8 {
 	lo := uint16(cpu.read(cpu.pc))
 	cpu.pc++
 
@@ -165,15 +153,14 @@ func (cpu *MOSTechnology6502) ABY() uint8 {
 	}
 }
 
-// checked
-func (cpu *MOSTechnology6502) IND() uint8 {
-	ptrLo := uint16(cpu.read(cpu.pc))
+func (cpu *MOSTechnology6502) ind() uint8 {
+	ptrLo := cpu.read(cpu.pc)
 	cpu.pc++
 
-	ptrHi := uint16(cpu.read(cpu.pc))
+	ptrHi := cpu.read(cpu.pc)
 	cpu.pc++
 
-	ptr := (ptrHi << 8) | ptrLo
+	ptr := (uint16(ptrHi) << 8) | uint16(ptrLo)
 
 	if ptrLo == 0x00FF {
 		//hardware bug simulation
@@ -184,15 +171,14 @@ func (cpu *MOSTechnology6502) IND() uint8 {
 
 	if cpu.debugger != nil {
 		cpu.debugger.CpuNumOperands = 2
-		cpu.debugger.CpuOperand1 = uint8(ptrLo & 0x00FF)
-		cpu.debugger.CpuOperand2 = uint8(ptrHi & 0x00FF)
+		cpu.debugger.CpuOperand1 = ptrLo
+		cpu.debugger.CpuOperand2 = ptrHi
 	}
 
 	return 0
 }
 
-// checked
-func (cpu *MOSTechnology6502) IZX() uint8 {
+func (cpu *MOSTechnology6502) izx() uint8 {
 	t := cpu.read(cpu.pc)
 	cpu.pc++
 
@@ -203,25 +189,24 @@ func (cpu *MOSTechnology6502) IZX() uint8 {
 
 	if cpu.debugger != nil {
 		cpu.debugger.CpuNumOperands = 1
-		cpu.debugger.CpuOperand1 = uint8(t)
+		cpu.debugger.CpuOperand1 = t
 	}
 
 	return 0
 }
 
-// checked
-func (cpu *MOSTechnology6502) IZY() uint8 {
-	t := uint16(cpu.read(cpu.pc))
+func (cpu *MOSTechnology6502) izy() uint8 {
+	t := cpu.read(cpu.pc)
 	cpu.pc++
 
-	lo := uint16(cpu.read((t + 0) & 0x00FF))
-	hi := uint16(cpu.read((t + 1) & 0x00FF))
+	lo := uint16(cpu.read((uint16(t) + 0) & 0x00FF))
+	hi := uint16(cpu.read((uint16(t) + 1) & 0x00FF))
 
 	cpu.addrAbs = ((hi << 8) | lo) + uint16(cpu.y)
 
 	if cpu.debugger != nil {
 		cpu.debugger.CpuNumOperands = 1
-		cpu.debugger.CpuOperand1 = uint8(t & 0x00FF)
+		cpu.debugger.CpuOperand1 = t
 	}
 
 	if cpu.addrAbs&0xFF00 != (hi << 8) {

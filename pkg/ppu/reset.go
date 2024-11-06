@@ -14,6 +14,10 @@ func (ppu *Ricoh2c02) Reset() {
 	ppu.bgShifterPatternLo = 0x0000
 	ppu.bgShifterAttrLo = 0x0000
 	ppu.bgShifterAttrHi = 0x0000
+	ppu.spriteShifterPatternLo = [8]uint8{}
+	ppu.spriteShifterPatternHi = [8]uint8{}
+	ppu.spriteZeroHitPossible = false
+	ppu.spriteZeroHitBeingRendered = false
 	ppu.status.SetReg(0x00)
 	ppu.mask.SetReg(0x00)
 	ppu.control.SetReg(0x00)

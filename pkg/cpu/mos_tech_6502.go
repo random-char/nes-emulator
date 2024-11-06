@@ -26,7 +26,6 @@ type MOSTechnology6502 struct {
 
 func New(
 	bus bus,
-	debugger *debugger.Debugger,
 ) *MOSTechnology6502 {
 	cpu := &MOSTechnology6502{
 		a: InitialState.a,
@@ -46,8 +45,7 @@ func New(
 		cycles:     0,
 		clockCount: 0,
 
-		bus:      bus,
-		debugger: debugger,
+		bus: bus,
 	}
 
 	initLookupFor(cpu)
@@ -55,12 +53,7 @@ func New(
 	return cpu
 }
 
-func (cpu *MOSTechnology6502) GetDebugger() *debugger.Debugger {
-	return cpu.debugger
-}
-
 func (cpu *MOSTechnology6502) fetch() uint8 {
-	// can't compare functions
 	if lookup[cpu.opcode].AMName != am_IMP {
 		cpu.fetched = cpu.read(cpu.addrAbs)
 	}

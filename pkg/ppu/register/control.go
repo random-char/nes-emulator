@@ -1,5 +1,7 @@
 package register
 
+import "nes-emulator/pkg/binary"
+
 type ControlReg struct {
 	//0_0_0_0_0_0_0_0
 	//| | | | | | | |
@@ -32,14 +34,6 @@ func (cr *ControlReg) IncrementReg(i uint8) {
 	cr.reg += i
 }
 
-func (cr *ControlReg) getData(dataLen, shift uint8) uint8 {
-	return getRegData(&cr.reg, dataLen, shift)
-}
-
-func (cr *ControlReg) setData(data, dataLen, shift uint8) {
-	setRegData(&cr.reg, data, dataLen, shift)
-}
-
 func (cr *ControlReg) GetNamtableX() uint8 {
 	return cr.getData(1, 0)
 }
@@ -66,4 +60,12 @@ func (cr *ControlReg) GetSpriteSize() uint8 {
 
 func (cr *ControlReg) GetEnableNmi() uint8 {
 	return cr.getData(1, 7)
+}
+
+func (cr *ControlReg) getData(dataLen, shift uint8) uint8 {
+	return binary.GetData(&cr.reg, dataLen, shift)
+}
+
+func (cr *ControlReg) setData(data, dataLen, shift uint8) {
+	binary.SetData(&cr.reg, data, dataLen, shift)
 }

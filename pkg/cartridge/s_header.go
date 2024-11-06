@@ -17,12 +17,12 @@ type sHeader struct {
 	Unused       [5]byte
 }
 
-func loadHeader(r io.Reader) *sHeader {
+func loadHeader(r io.Reader) (*sHeader, error) {
 	header := &sHeader{}
 
 	if err := binary.Read(r, binary.LittleEndian, header); err != nil {
-		//todo return err
+		return nil, err
 	}
 
-	return header
+	return header, nil
 }

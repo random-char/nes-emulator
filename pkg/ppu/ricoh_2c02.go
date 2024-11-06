@@ -4,29 +4,38 @@ import (
 	"nes-emulator/pkg/cartridge"
 	"nes-emulator/pkg/debugger"
 	"nes-emulator/pkg/ppu/register"
-	"nes-emulator/pkg/ppu/visuals"
+	"nes-emulator/pkg/visuals"
 )
 
 type Ricoh2c02 struct {
-	cycle         int16
-	scanline      int16
+	Nmi           bool
 	FrameRendered bool
+
+	cycle    int16
+	scanline int16
+
+	fineX        uint8
+	addressLatch uint8
+	dataBuffer   uint8
 
 	//registers
 	vramAddr *register.LoopyReg
 	tramAddr *register.LoopyReg
-	fineX    uint8
+	status   *register.StatusReg
+	mask     *register.MaskReg
+	control  *register.ControlReg
 
-	status  *register.StatusReg
-	mask    *register.MaskReg
-	control *register.ControlReg
+	//object attribute memory
+	oamAddr                    uint8
+	OAM                        *OAM
+	SpriteScanline             *spriteScanline
+	spriteCount                uint8
+	spriteZeroHitPossible      bool
+	spriteZeroHitBeingRendered bool
 
-	addressLatch uint8
-	dataBuffer   uint8
-
-	tblName    [2][1024]uint8 //[2][1024]
-	tblPattern [2][4096]uint8 //[2][4096] javidx9 Extension idea
-	tblPallete [32]uint8      //[32]
+	tblName    [2][1024]uint8
+	tblPattern [2][4096]uint8 //javidx9 Extension idea
+	tblPallete [32]uint8
 
 	sprNameTable    [2]*visuals.Sprite
 	sprPatternTable [2]*visuals.Sprite
@@ -37,12 +46,12 @@ type Ricoh2c02 struct {
 	bgNextTileLsb  uint8
 	bgNextTileMsb  uint8
 	//shifters
-	bgShifterPatternLo uint16
-	bgShifterPatternHi uint16
-	bgShifterAttrLo    uint16
-	bgShifterAttrHi    uint16
-
-	Nmi bool
+	bgShifterPatternLo     uint16
+	bgShifterPatternHi     uint16
+	bgShifterAttrLo        uint16
+	bgShifterAttrHi        uint16
+	spriteShifterPatternLo [8]uint8
+	spriteShifterPatternHi [8]uint8
 
 	receiver      VideoReceiver
 	debugReceiver DebugReceiver
@@ -51,25 +60,25 @@ type Ricoh2c02 struct {
 	debugger  *debugger.Debugger
 }
 
-func New(
-	receiver VideoReceiver,
-	debugReceiver DebugReceiver,
-) *Ricoh2c02 {
+func New() *Ricoh2c02 {
 	return &Ricoh2c02{
 		Nmi: false,
 
 		cycle:    0,
 		scanline: 0,
 
-		status:  register.NewStatusReg(),
-		mask:    register.NewMaskReg(),
-		control: register.NewControlReg(),
+		oamAddr:        0x00,
+		OAM:            NewOAM(),
+		SpriteScanline: newSpriteScanline(),
 
-		vramAddr:     register.NewLoopyReg(),
-		tramAddr:     register.NewLoopyReg(),
 		fineX:        0x00,
 		addressLatch: 0x00,
 		dataBuffer:   0x00,
+		vramAddr:     register.NewLoopyReg(),
+		tramAddr:     register.NewLoopyReg(),
+		status:       register.NewStatusReg(),
+		mask:         register.NewMaskReg(),
+		control:      register.NewControlReg(),
 
 		sprNameTable: visuals.NewSpriteTable(
 			256, 240,
@@ -79,10 +88,5 @@ func New(
 			128, 128,
 			128, 128,
 		),
-
-		receiver:      receiver,
-		debugReceiver: debugReceiver,
-		debugger:      &debugger.Debugger{},
 	}
 }
-

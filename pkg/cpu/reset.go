@@ -1,7 +1,7 @@
 package cpu
 
 func (cpu *MOSTechnology6502) Reset() {
-	if InitialState.fromSpecificPc {
+	if InitialState.startFomSpecificPc {
 		cpu.pc = InitialState.pc
 	} else {
 		cpu.addrAbs = 0xFFFC

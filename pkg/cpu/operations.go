@@ -61,8 +61,7 @@ const (
 )
 
 // add with carry
-// checked
-func (cpu *MOSTechnology6502) ADC() uint8 {
+func (cpu *MOSTechnology6502) adc() uint8 {
 	cpu.fetch()
 
 	tmp := uint16(cpu.a) + uint16(cpu.fetched) + uint16(cpu.getFlag(flag_C))
@@ -83,8 +82,7 @@ func (cpu *MOSTechnology6502) ADC() uint8 {
 }
 
 // and (with accumulator)
-// checked
-func (cpu *MOSTechnology6502) AND() uint8 {
+func (cpu *MOSTechnology6502) and() uint8 {
 	cpu.fetch()
 
 	cpu.a &= cpu.fetched
@@ -103,8 +101,7 @@ func (cpu *MOSTechnology6502) AND() uint8 {
 }
 
 // arithmetic shift left
-// checked
-func (cpu *MOSTechnology6502) ASL() uint8 {
+func (cpu *MOSTechnology6502) asl() uint8 {
 	cpu.fetch()
 
 	tmp := uint16(cpu.fetched) << 1
@@ -127,8 +124,7 @@ func (cpu *MOSTechnology6502) ASL() uint8 {
 }
 
 // branch on carry clear
-// checked
-func (cpu *MOSTechnology6502) BCC() uint8 {
+func (cpu *MOSTechnology6502) bcc() uint8 {
 	if cpu.getFlag(flag_C) == 0 {
 		cpu.cycles++
 
@@ -144,8 +140,7 @@ func (cpu *MOSTechnology6502) BCC() uint8 {
 }
 
 // branch on carry set
-// checked
-func (cpu *MOSTechnology6502) BCS() uint8 {
+func (cpu *MOSTechnology6502) bcs() uint8 {
 	if cpu.getFlag(flag_C) == 1 {
 		cpu.cycles++
 
@@ -161,8 +156,7 @@ func (cpu *MOSTechnology6502) BCS() uint8 {
 }
 
 // branch on equal (zero set)
-// checked
-func (cpu *MOSTechnology6502) BEQ() uint8 {
+func (cpu *MOSTechnology6502) beq() uint8 {
 	if cpu.getFlag(flag_Z) == 1 {
 		cpu.cycles++
 
@@ -178,8 +172,7 @@ func (cpu *MOSTechnology6502) BEQ() uint8 {
 }
 
 // bit test
-// checked
-func (cpu *MOSTechnology6502) BIT() uint8 {
+func (cpu *MOSTechnology6502) bit() uint8 {
 	cpu.fetch()
 
 	tmp := uint16(cpu.a & cpu.fetched)
@@ -192,8 +185,7 @@ func (cpu *MOSTechnology6502) BIT() uint8 {
 }
 
 // branch on minus (negative set)
-// checked
-func (cpu *MOSTechnology6502) BMI() uint8 {
+func (cpu *MOSTechnology6502) bmi() uint8 {
 	if cpu.getFlag(flag_N) == 1 {
 		cpu.cycles++
 
@@ -209,8 +201,7 @@ func (cpu *MOSTechnology6502) BMI() uint8 {
 }
 
 // branch on not equal (zero clear)
-// checked
-func (cpu *MOSTechnology6502) BNE() uint8 {
+func (cpu *MOSTechnology6502) bne() uint8 {
 	if cpu.getFlag(flag_Z) == 0 {
 		cpu.cycles++
 
@@ -226,8 +217,7 @@ func (cpu *MOSTechnology6502) BNE() uint8 {
 }
 
 // branch on plus (negative clear)
-// checked
-func (cpu *MOSTechnology6502) BPL() uint8 {
+func (cpu *MOSTechnology6502) bpl() uint8 {
 	if cpu.getFlag(flag_N) == 0 {
 		cpu.cycles++
 
@@ -243,8 +233,7 @@ func (cpu *MOSTechnology6502) BPL() uint8 {
 }
 
 // break / interrupt
-// checked
-func (cpu *MOSTechnology6502) BRK() uint8 {
+func (cpu *MOSTechnology6502) brk() uint8 {
 	cpu.pc++
 
 	cpu.setFlag(flag_I, true)
@@ -264,8 +253,7 @@ func (cpu *MOSTechnology6502) BRK() uint8 {
 }
 
 // branch on overflow clear
-// checked
-func (cpu *MOSTechnology6502) BVC() uint8 {
+func (cpu *MOSTechnology6502) bvc() uint8 {
 	if cpu.getFlag(flag_V) == 0 {
 		cpu.cycles++
 
@@ -281,8 +269,7 @@ func (cpu *MOSTechnology6502) BVC() uint8 {
 }
 
 // branch on overflow set
-// checked
-func (cpu *MOSTechnology6502) BVS() uint8 {
+func (cpu *MOSTechnology6502) bvs() uint8 {
 	if cpu.getFlag(flag_V) == 1 {
 		cpu.cycles++
 
@@ -298,8 +285,7 @@ func (cpu *MOSTechnology6502) BVS() uint8 {
 }
 
 // clear carry
-// checked
-func (cpu *MOSTechnology6502) CLC() uint8 {
+func (cpu *MOSTechnology6502) clc() uint8 {
 	cpu.setFlag(flag_C, false)
 
 	if cpu.debugger != nil {
@@ -310,8 +296,7 @@ func (cpu *MOSTechnology6502) CLC() uint8 {
 }
 
 // clear decimal
-// checked
-func (cpu *MOSTechnology6502) CLD() uint8 {
+func (cpu *MOSTechnology6502) cld() uint8 {
 	cpu.setFlag(flag_D, false)
 
 	if cpu.debugger != nil {
@@ -322,8 +307,7 @@ func (cpu *MOSTechnology6502) CLD() uint8 {
 }
 
 // clear interrupt disable
-// checked
-func (cpu *MOSTechnology6502) CLI() uint8 {
+func (cpu *MOSTechnology6502) cli() uint8 {
 	cpu.setFlag(flag_I, false)
 
 	if cpu.debugger != nil {
@@ -334,8 +318,7 @@ func (cpu *MOSTechnology6502) CLI() uint8 {
 }
 
 // clear overflow
-// checked
-func (cpu *MOSTechnology6502) CLV() uint8 {
+func (cpu *MOSTechnology6502) clv() uint8 {
 	cpu.setFlag(flag_V, false)
 
 	if cpu.debugger != nil {
@@ -346,8 +329,7 @@ func (cpu *MOSTechnology6502) CLV() uint8 {
 }
 
 // compare (with accumulator)
-// checked
-func (cpu *MOSTechnology6502) CMP() uint8 {
+func (cpu *MOSTechnology6502) cmp() uint8 {
 	cpu.fetch()
 
 	tmp := uint16(cpu.a - cpu.fetched)
@@ -365,8 +347,7 @@ func (cpu *MOSTechnology6502) CMP() uint8 {
 }
 
 // compare with X
-// checked
-func (cpu *MOSTechnology6502) CPX() uint8 {
+func (cpu *MOSTechnology6502) cpx() uint8 {
 	cpu.fetch()
 
 	tmp := uint16(cpu.x - cpu.fetched)
@@ -384,8 +365,7 @@ func (cpu *MOSTechnology6502) CPX() uint8 {
 }
 
 // compare with Y
-// checked
-func (cpu *MOSTechnology6502) CPY() uint8 {
+func (cpu *MOSTechnology6502) cpy() uint8 {
 	cpu.fetch()
 
 	tmp := uint16(cpu.y - cpu.fetched)
@@ -403,8 +383,7 @@ func (cpu *MOSTechnology6502) CPY() uint8 {
 }
 
 // decrement
-// checked
-func (cpu *MOSTechnology6502) DEC() uint8 {
+func (cpu *MOSTechnology6502) dec() uint8 {
 	cpu.fetch()
 
 	tmp := uint16(cpu.fetched - 1)
@@ -418,8 +397,7 @@ func (cpu *MOSTechnology6502) DEC() uint8 {
 }
 
 // decrement X
-// checked
-func (cpu *MOSTechnology6502) DEX() uint8 {
+func (cpu *MOSTechnology6502) dex() uint8 {
 	cpu.x--
 	cpu.setFlag(flag_Z, cpu.x == 0x00)
 	cpu.setFlag(flag_N, (cpu.x&0x80) != 0)
@@ -432,8 +410,7 @@ func (cpu *MOSTechnology6502) DEX() uint8 {
 }
 
 // decrement Y
-// checked
-func (cpu *MOSTechnology6502) DEY() uint8 {
+func (cpu *MOSTechnology6502) dey() uint8 {
 	cpu.y--
 	cpu.setFlag(flag_Z, cpu.y == 0x00)
 	cpu.setFlag(flag_N, (cpu.y&0x80) != 0)
@@ -446,8 +423,7 @@ func (cpu *MOSTechnology6502) DEY() uint8 {
 }
 
 // exclusive or (with accumulator)
-// checked
-func (cpu *MOSTechnology6502) EOR() uint8 {
+func (cpu *MOSTechnology6502) eor() uint8 {
 	cpu.fetch()
 
 	cpu.a = cpu.a ^ cpu.fetched
@@ -464,8 +440,7 @@ func (cpu *MOSTechnology6502) EOR() uint8 {
 }
 
 // increment
-// checked
-func (cpu *MOSTechnology6502) INC() uint8 {
+func (cpu *MOSTechnology6502) inc() uint8 {
 	cpu.fetch()
 
 	tmp := uint16(cpu.fetched) + 1
@@ -478,8 +453,7 @@ func (cpu *MOSTechnology6502) INC() uint8 {
 }
 
 // increment X
-// checked
-func (cpu *MOSTechnology6502) INX() uint8 {
+func (cpu *MOSTechnology6502) inx() uint8 {
 	cpu.x++
 
 	cpu.setFlag(flag_Z, cpu.x == 0)
@@ -493,8 +467,7 @@ func (cpu *MOSTechnology6502) INX() uint8 {
 }
 
 // increment Y
-// checked
-func (cpu *MOSTechnology6502) INY() uint8 {
+func (cpu *MOSTechnology6502) iny() uint8 {
 	cpu.y++
 
 	cpu.setFlag(flag_Z, cpu.y == 0)
@@ -508,16 +481,14 @@ func (cpu *MOSTechnology6502) INY() uint8 {
 }
 
 // jump
-// checked
-func (cpu *MOSTechnology6502) JMP() uint8 {
+func (cpu *MOSTechnology6502) jmp() uint8 {
 	cpu.pc = cpu.addrAbs
 
 	return 0
 }
 
 // jump subroutine
-// checked
-func (cpu *MOSTechnology6502) JSR() uint8 {
+func (cpu *MOSTechnology6502) jsr() uint8 {
 	cpu.pc--
 
 	cpu.write(0x0100+uint16(cpu.stkp), uint8((cpu.pc>>8)&0x00FF))
@@ -531,8 +502,7 @@ func (cpu *MOSTechnology6502) JSR() uint8 {
 }
 
 // load accumulator
-// checked
-func (cpu *MOSTechnology6502) LDA() uint8 {
+func (cpu *MOSTechnology6502) lds() uint8 {
 	cpu.fetch()
 	cpu.a = cpu.fetched
 
@@ -550,8 +520,7 @@ func (cpu *MOSTechnology6502) LDA() uint8 {
 }
 
 // load X
-// checked
-func (cpu *MOSTechnology6502) LDX() uint8 {
+func (cpu *MOSTechnology6502) ldx() uint8 {
 	cpu.fetch()
 	cpu.x = cpu.fetched
 
@@ -569,8 +538,7 @@ func (cpu *MOSTechnology6502) LDX() uint8 {
 }
 
 // load Y
-// checked
-func (cpu *MOSTechnology6502) LDY() uint8 {
+func (cpu *MOSTechnology6502) ldy() uint8 {
 	cpu.fetch()
 	cpu.y = cpu.fetched
 
@@ -588,8 +556,7 @@ func (cpu *MOSTechnology6502) LDY() uint8 {
 }
 
 // logical shift right
-// checked
-func (cpu *MOSTechnology6502) LSR() uint8 {
+func (cpu *MOSTechnology6502) lsr() uint8 {
 	cpu.fetch()
 
 	cpu.setFlag(flag_C, (cpu.fetched&0x0001) != 0)
@@ -612,8 +579,7 @@ func (cpu *MOSTechnology6502) LSR() uint8 {
 }
 
 // no operation
-// checked
-func (cpu *MOSTechnology6502) NOP() uint8 {
+func (cpu *MOSTechnology6502) nop() uint8 {
 	// based on https://wiki.nesdev.com/w/index.php/CPU_unofficial_opcodes
 	switch cpu.opcode {
 	case 0x1C:
@@ -629,8 +595,7 @@ func (cpu *MOSTechnology6502) NOP() uint8 {
 }
 
 // or with accumulator
-// checked
-func (cpu *MOSTechnology6502) ORA() uint8 {
+func (cpu *MOSTechnology6502) ora() uint8 {
 	cpu.fetch()
 
 	cpu.a = cpu.a | cpu.fetched
@@ -647,8 +612,7 @@ func (cpu *MOSTechnology6502) ORA() uint8 {
 }
 
 // push accumulator
-// checked
-func (cpu *MOSTechnology6502) PHA() uint8 {
+func (cpu *MOSTechnology6502) pha() uint8 {
 	cpu.write(0x0100+uint16(cpu.stkp), cpu.a)
 	cpu.stkp--
 
@@ -660,8 +624,7 @@ func (cpu *MOSTechnology6502) PHA() uint8 {
 }
 
 // push processor status (SR)
-// checked
-func (cpu *MOSTechnology6502) PHP() uint8 {
+func (cpu *MOSTechnology6502) php() uint8 {
 	cpu.write(0x0100+uint16(cpu.stkp), cpu.status|flag_B|flag_U)
 
 	cpu.setFlag(flag_B, false)
@@ -677,8 +640,7 @@ func (cpu *MOSTechnology6502) PHP() uint8 {
 }
 
 // pull accumulator
-// checked
-func (cpu *MOSTechnology6502) PLA() uint8 {
+func (cpu *MOSTechnology6502) pla() uint8 {
 	cpu.stkp++
 	cpu.a = cpu.read(0x0100 + uint16(cpu.stkp))
 
@@ -693,8 +655,7 @@ func (cpu *MOSTechnology6502) PLA() uint8 {
 }
 
 // pull processor status (SR)
-// checked
-func (cpu *MOSTechnology6502) PLP() uint8 {
+func (cpu *MOSTechnology6502) plp() uint8 {
 	cpu.stkp++
 
 	cpu.status = cpu.read(0x0100 + uint16(cpu.stkp))
@@ -708,8 +669,7 @@ func (cpu *MOSTechnology6502) PLP() uint8 {
 }
 
 // rotate left
-// checked
-func (cpu *MOSTechnology6502) ROL() uint8 {
+func (cpu *MOSTechnology6502) rol() uint8 {
 	cpu.fetch()
 
 	tmp := (uint16(cpu.fetched) << 1) | uint16(cpu.getFlag(flag_C))
@@ -732,8 +692,7 @@ func (cpu *MOSTechnology6502) ROL() uint8 {
 }
 
 // rotate right
-// checked
-func (cpu *MOSTechnology6502) ROR() uint8 {
+func (cpu *MOSTechnology6502) ror() uint8 {
 	cpu.fetch()
 
 	tmp := (uint16(cpu.getFlag(flag_C)) << 7) | uint16(cpu.fetched>>1)
@@ -756,8 +715,7 @@ func (cpu *MOSTechnology6502) ROR() uint8 {
 }
 
 // return from interrupt
-// checked
-func (cpu *MOSTechnology6502) RTI() uint8 {
+func (cpu *MOSTechnology6502) rti() uint8 {
 	cpu.stkp++
 
 	cpu.status = cpu.read(0x0100 + uint16(cpu.stkp))
@@ -777,8 +735,7 @@ func (cpu *MOSTechnology6502) RTI() uint8 {
 }
 
 // return from subroutine
-// checked
-func (cpu *MOSTechnology6502) RTS() uint8 {
+func (cpu *MOSTechnology6502) rts() uint8 {
 	cpu.stkp++
 	cpu.pc = uint16(cpu.read(0x0100 + uint16(cpu.stkp)))
 	cpu.stkp++
@@ -795,8 +752,7 @@ func (cpu *MOSTechnology6502) RTS() uint8 {
 }
 
 // subtract with carry
-// checked
-func (cpu *MOSTechnology6502) SBC() uint8 {
+func (cpu *MOSTechnology6502) sbc() uint8 {
 	cpu.fetch()
 
 	value := uint16(cpu.fetched) ^ 0x00FF
@@ -820,8 +776,7 @@ func (cpu *MOSTechnology6502) SBC() uint8 {
 }
 
 // set carry
-// checked
-func (cpu *MOSTechnology6502) SEC() uint8 {
+func (cpu *MOSTechnology6502) sec() uint8 {
 	cpu.setFlag(flag_C, true)
 
 	if cpu.debugger != nil {
@@ -832,8 +787,7 @@ func (cpu *MOSTechnology6502) SEC() uint8 {
 }
 
 // set decimal
-// checked
-func (cpu *MOSTechnology6502) SED() uint8 {
+func (cpu *MOSTechnology6502) sed() uint8 {
 	cpu.setFlag(flag_D, true)
 
 	if cpu.debugger != nil {
@@ -844,8 +798,7 @@ func (cpu *MOSTechnology6502) SED() uint8 {
 }
 
 // set interrupt disable
-// checked
-func (cpu *MOSTechnology6502) SEI() uint8 {
+func (cpu *MOSTechnology6502) sei() uint8 {
 	cpu.setFlag(flag_I, true)
 
 	if cpu.debugger != nil {
@@ -856,32 +809,28 @@ func (cpu *MOSTechnology6502) SEI() uint8 {
 }
 
 // store accumulator
-// checked
-func (cpu *MOSTechnology6502) STA() uint8 {
+func (cpu *MOSTechnology6502) sta() uint8 {
 	cpu.write(cpu.addrAbs, cpu.a)
 
 	return 0
 }
 
 // store X
-// checked
-func (cpu *MOSTechnology6502) STX() uint8 {
+func (cpu *MOSTechnology6502) stx() uint8 {
 	cpu.write(cpu.addrAbs, cpu.x)
 
 	return 0
 }
 
 // store Y
-// checked
-func (cpu *MOSTechnology6502) STY() uint8 {
+func (cpu *MOSTechnology6502) sty() uint8 {
 	cpu.write(cpu.addrAbs, cpu.y)
 
 	return 0
 }
 
 // transfer accumulator to X
-// checked
-func (cpu *MOSTechnology6502) TAX() uint8 {
+func (cpu *MOSTechnology6502) tax() uint8 {
 	cpu.x = cpu.a
 
 	cpu.setFlag(flag_Z, cpu.x == 0)
@@ -895,8 +844,7 @@ func (cpu *MOSTechnology6502) TAX() uint8 {
 }
 
 // transfer accumulator to Y
-// checked
-func (cpu *MOSTechnology6502) TAY() uint8 {
+func (cpu *MOSTechnology6502) tay() uint8 {
 	cpu.y = cpu.a
 
 	cpu.setFlag(flag_Z, cpu.y == 0)
@@ -910,8 +858,7 @@ func (cpu *MOSTechnology6502) TAY() uint8 {
 }
 
 // transfer stack pointer to X
-// checked
-func (cpu *MOSTechnology6502) TSX() uint8 {
+func (cpu *MOSTechnology6502) tsx() uint8 {
 	cpu.x = cpu.stkp
 
 	cpu.setFlag(flag_Z, cpu.x == 0)
@@ -925,8 +872,7 @@ func (cpu *MOSTechnology6502) TSX() uint8 {
 }
 
 // transfer X to accumulator
-// checked
-func (cpu *MOSTechnology6502) TXA() uint8 {
+func (cpu *MOSTechnology6502) txa() uint8 {
 	cpu.a = cpu.x
 
 	cpu.setFlag(flag_Z, cpu.a == 0)
@@ -940,8 +886,7 @@ func (cpu *MOSTechnology6502) TXA() uint8 {
 }
 
 // transfer X to stack pointer
-// checked
-func (cpu *MOSTechnology6502) TXS() uint8 {
+func (cpu *MOSTechnology6502) txs() uint8 {
 	cpu.stkp = cpu.x
 
 	if cpu.debugger != nil {
@@ -952,8 +897,7 @@ func (cpu *MOSTechnology6502) TXS() uint8 {
 }
 
 // transfer Y to accumulator
-// checked
-func (cpu *MOSTechnology6502) TYA() uint8 {
+func (cpu *MOSTechnology6502) tya() uint8 {
 	cpu.a = cpu.y
 
 	cpu.setFlag(flag_Z, cpu.a == 0)
@@ -967,7 +911,7 @@ func (cpu *MOSTechnology6502) TYA() uint8 {
 }
 
 // illegal opcode
-func (cpu *MOSTechnology6502) ILL() uint8 {
+func (cpu *MOSTechnology6502) ill() uint8 {
 	return 0
 }
 

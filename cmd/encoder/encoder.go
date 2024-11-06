@@ -2,17 +2,26 @@ package main
 
 import (
 	"encoding/base64"
+	"flag"
 	"fmt"
 	"os"
 )
 
-func main() {
-	//todo pass filename from args
-	var filename string
+const usage string = "usage: encoder -f rom_filename"
 
-	b, err := os.ReadFile(filename)
+func main() {
+	filename := flag.String("f", "", "Rom file")
+	flag.Parse()
+
+	if *filename == "" {
+		fmt.Fprintln(os.Stderr, usage)
+		os.Exit(1)
+	}
+
+	b, err := os.ReadFile(*filename)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Couldn't open file: %s\n", err)
+		os.Exit(1)
 	}
 
 	sEnc := base64.StdEncoding.EncodeToString(b)

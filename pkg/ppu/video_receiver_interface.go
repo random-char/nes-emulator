@@ -1,11 +1,7 @@
 package ppu
 
-import "nes-emulator/pkg/ppu/visuals"
+import "nes-emulator/pkg/visuals"
 
 type VideoReceiver interface {
 	RenderFrame([]*visuals.Pixel)
-}
-
-type DebugReceiver interface {
-    RenderPatternTables(int, *visuals.Sprite)
 }

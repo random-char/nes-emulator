@@ -1,5 +1,7 @@
 package register
 
+import "nes-emulator/pkg/binary"
+
 type MaskReg struct {
 	//0_0_0_0_0_0_0_0
 	//| | | | | | | |
@@ -26,14 +28,6 @@ func (mr *MaskReg) GetReg() uint8 {
 
 func (mr *MaskReg) SetReg(reg uint8) {
 	mr.reg = reg
-}
-
-func (mr *MaskReg) getData(dataLen, shift uint8) uint8 {
-	return getRegData(&mr.reg, dataLen, shift)
-}
-
-func (mr *MaskReg) setData(data, dataLen, shift uint8) {
-	setRegData(&mr.reg, data, dataLen, shift)
 }
 
 func (mr *MaskReg) GetGrayscale() uint8 {
@@ -66,4 +60,12 @@ func (mr *MaskReg) GetEnhanceGreen() uint8 {
 
 func (mr *MaskReg) GetEnhanceBlue() uint8 {
 	return mr.getData(1, 7)
+}
+
+func (mr *MaskReg) getData(dataLen, shift uint8) uint8 {
+	return binary.GetData(&mr.reg, dataLen, shift)
+}
+
+func (mr *MaskReg) setData(data, dataLen, shift uint8) {
+	binary.SetData(&mr.reg, data, dataLen, shift)
 }

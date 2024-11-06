@@ -1,5 +1,7 @@
 package cpu
 
+import "nes-emulator/pkg/binary"
+
 const (
 	flag_C = uint8(1 << 0) // carry bit
 	flag_Z = uint8(1 << 1) // zero
@@ -12,17 +14,13 @@ const (
 )
 
 func (cpu *MOSTechnology6502) setFlag(flag uint8, value bool) {
-	if value {
-		cpu.status |= flag
-	} else {
-		cpu.status &= ^flag
-	}
+	binary.SetBoolFlag(&cpu.status, flag, value)
 }
 
 func (cpu *MOSTechnology6502) getFlag(flag uint8) uint8 {
-	if cpu.status&flag != 0 {
-		return 1
+	if binary.GetBoolFlag(cpu.status, flag) {
+		return 0x01
 	} else {
-		return 0
+		return 0x00
 	}
 }

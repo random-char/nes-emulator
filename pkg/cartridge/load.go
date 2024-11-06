@@ -6,7 +6,10 @@ import (
 )
 
 func load(rsc io.ReadSeeker) (*Cartridge, error) {
-	header := loadHeader(rsc)
+	header ,err := loadHeader(rsc)
+    if err != nil {
+        return nil, ReadingHeaderError
+    }
 
 	if (header.Mapper1 & 0x04) != 0 {
 		// reserved for trainers, ignore for now
@@ -19,9 +22,9 @@ func load(rsc io.ReadSeeker) (*Cartridge, error) {
 		mirror = vertical
 	}
 
-	var nFileType uint8 = 1
-	var nPRGBanks uint8 = 0
-	var nCHRBanks uint8 = 0
+	var nFileType uint8 = 0x01
+	var nPRGBanks uint8 = 0x00
+	var nCHRBanks uint8 = 0x00
 
 	var vPRGMemory, vCHRMemory []uint8
 
@@ -31,7 +34,7 @@ func load(rsc io.ReadSeeker) (*Cartridge, error) {
 		vPRGMemory = make([]uint8, uint(nPRGBanks)*0x4000)
 
 		if _, err := io.ReadFull(rsc, vPRGMemory); err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		nCHRBanks = header.CHRRomChunks
@@ -42,10 +45,15 @@ func load(rsc io.ReadSeeker) (*Cartridge, error) {
 		vCHRMemory = make([]uint8, length)
 
 		if _, err := io.ReadFull(rsc, vCHRMemory); err != nil {
-			panic(err)
+			return nil, err
 		}
 	default:
-		panic("Unsupported nFileType")
+		return nil, UnsupportedFileTypeErr
+	}
+
+	m, err := mapper.CreateMapper(nMapperID, nPRGBanks, nCHRBanks)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Cartridge{
@@ -57,6 +65,6 @@ func load(rsc io.ReadSeeker) (*Cartridge, error) {
 		nCHRBanks: nCHRBanks,
 		mirror:    mirror,
 
-		mapper: mapper.CreateMapper(nMapperID, nPRGBanks, nCHRBanks),
+		mapper: m,
 	}, nil
 }

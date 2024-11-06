@@ -10,7 +10,7 @@ type initialState struct {
 	pc     uint16
 	status uint8
 
-	fromSpecificPc bool
+	startFomSpecificPc bool
 }
 
 func newInitialState() *initialState {
@@ -21,22 +21,22 @@ func newInitialState() *initialState {
 
 		stkp: 0xFD,
 
-		fromSpecificPc: false,
-		pc:             0x0000,
-		status:         0x00 | flag_U | flag_I,
+		startFomSpecificPc: false,
 
+		pc:     0x0000,
+		status: 0x00 | flag_U | flag_I,
 	}
 }
 
-func (is *initialState) WithPc(pc uint16) *initialState {
-    is.fromSpecificPc = true
+func (is *initialState) SetStartingPc(pc uint16) *initialState {
+	is.startFomSpecificPc = true
 	is.pc = pc
 
 	return is
 }
 
-func (is *initialState) WithDefaultPc() *initialState {
-    is.fromSpecificPc = false
+func (is *initialState) SetDefaultStartingPc() *initialState {
+	is.startFomSpecificPc = false
 	is.pc = 0x0000
 
 	return is

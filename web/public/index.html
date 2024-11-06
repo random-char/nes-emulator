@@ -9,8 +9,15 @@
     <script src="/assets/js/wasm_exec.js"></script>
   </head>
   <body>
+    <div>
+      <button id="start-btn" type="button">Start</button>
+      <button id="stop-btn" type="button">Stop</button>
+      <button id="reset-btn" type="button">Reset</button>
+      <input id="cartridge-upload" type="file" />
+    </div>
+
     <canvas id="canvas" width="256" height="240"></canvas>
-    <canvas id="debug-canvas" width="128" height="256"></canvas>
+    <canvas id="debug-canvas" width="256" height="128"></canvas>
   </body>
 
   <script>
@@ -20,6 +27,34 @@
       go.importObject,
     ).then((result) => {
       go.run(result.instance);
+
+      document.getElementById("start-btn").onclick = NesStart;
+      document.getElementById("stop-btn").onclick = NesStop;
+      document.getElementById("reset-btn").onclick = NesReset;
+
+      const cartFileInput = document.getElementById("cartridge-upload");
+      cartFileInput.onchange = async function () {
+        const file = await toBase64(this.files[0]);
+        if (!file) {
+          return;
+        }
+
+        NesInsertCartridgeB64(file);
+      };
+
+      const toBase64 = (file) =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => {
+            let encoded = reader.result.toString().replace(/^data:(.*,)?/, "");
+            if (encoded.length % 4 > 0) {
+              encoded += "=".repeat(4 - (encoded.length % 4));
+            }
+            resolve(encoded);
+          };
+          reader.onerror = reject;
+        });
     });
   </script>
 </html>

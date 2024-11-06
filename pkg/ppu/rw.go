@@ -11,12 +11,14 @@ func (ppu *Ricoh2c02) CpuRead(addr uint16) uint8 {
 	// Status
 	case 0x0002:
 		data = (ppu.status.GetReg() & 0xE0) | (ppu.dataBuffer & 0x1F)
-		ppu.status.SetVerticalBlank(0)
+		ppu.status.SetVerticalBlank(false)
 		ppu.addressLatch = 0
 	// OAM Address
 	case 0x0003:
 	// OAM Data
 	case 0x0004:
+		//todo recheck
+		data = ppu.OAM.Get(ppu.oamAddr)
 	// Scroll
 	case 0x0005:
 	// PPU Address
@@ -35,8 +37,6 @@ func (ppu *Ricoh2c02) CpuRead(addr uint16) uint8 {
 		} else {
 			ppu.vramAddr.IncrementReg(1)
 		}
-	default:
-		panic("wrong address")
 	}
 
 	return data
@@ -60,8 +60,10 @@ func (ppu *Ricoh2c02) CpuWrite(addr uint16, data uint8) {
 	case 0x0002:
 	// OAM Address
 	case 0x0003:
+		ppu.oamAddr = data
 	// OAM Data
 	case 0x0004:
+		ppu.OAM.Set(ppu.oamAddr, data)
 	// Scroll
 	case 0x0005:
 		if ppu.addressLatch == 0 {
@@ -92,8 +94,6 @@ func (ppu *Ricoh2c02) CpuWrite(addr uint16, data uint8) {
 		} else {
 			ppu.vramAddr.IncrementReg(1)
 		}
-	default:
-		panic("wrong address")
 	}
 }
 

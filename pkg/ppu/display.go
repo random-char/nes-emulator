@@ -1,24 +1,24 @@
 package ppu
 
 import (
-	"nes-emulator/pkg/ppu/visuals"
+	"nes-emulator/pkg/visuals"
 )
 
-func (ppu *Ricoh2c02) getPatternTable(i, palette uint8) *visuals.Sprite {
-	var nTileX, nTileY, nOffset uint16
-	// var tileLsb, tileMsb, tilePixel uint8
-	var row, col uint16
+var nTileX, nTileY, nOffset uint16
+var tileLsb, tileMsb, tilePixel uint8
+var row, col uint16
 
+func (ppu *Ricoh2c02) getPatternTable(i, palette uint8) *visuals.Sprite {
 	for nTileX = 0; nTileX < 16; nTileX++ {
 		for nTileY = 0; nTileY < 16; nTileY++ {
 			nOffset = nTileY*256 + nTileX*16
 
 			for row = 0; row < 8; row++ {
-				tileLsb := ppu.PpuRead(uint16(i)*0x1000 + nOffset + row)
-				tileMsb := ppu.PpuRead(uint16(i)*0x1000 + nOffset + row + 8)
+				tileLsb = ppu.PpuRead(uint16(i)*0x1000 + nOffset + row)
+				tileMsb = ppu.PpuRead(uint16(i)*0x1000 + nOffset + row + 8)
 
 				for col = 0; col < 8; col++ {
-					tilePixel := (tileLsb & 0x01) + (tileMsb & 0x01)
+					tilePixel = ((tileLsb & 0x01) << 1) | (tileMsb & 0x01)
 					tileLsb >>= 1
 					tileMsb >>= 1
 					ppu.sprPatternTable[i].SetPixel(

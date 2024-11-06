@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title></title>
+    <link href="/assets/css/main.css" rel="stylesheet" />
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/tinygo_wasm_exec.js"></script>
+  </head>
+  <body>
+    <div>
+      <button id="start-btn" type="button">Start</button>
+      <button id="stop-btn" type="button">Stop</button>
+      <button id="reset-btn" type="button">Reset</button>
+    </div>
+
+    <canvas id="canvas" width="256" height="240"></canvas>
+    <canvas id="debug-canvas" width="256" height="128"></canvas>
+  </body>
+
+  <script>
+    const go = new Go();
+
+    if ("instantiateStreaming" in WebAssembly) {
+      WebAssembly.instantiateStreaming(
+        fetch("/assets/wasm/nes_tinygo.wasm"),
+        go.importObject,
+      ).then(function (obj) {
+        wasm = obj.instance;
+        go.run(wasm);
+
+        addEventListener("keydown", (event) => {
+          wasm.exports.keyDown(event.key.charCodeAt(0));
+        });
+        addEventListener("keyup", (event) => {
+          wasm.exports.keyUp(event.key.charCodeAt(0));
+        });
+
+        document.getElementById("start-btn").onclick = wasm.exports.start;
+        document.getElementById("stop-btn").onclick = wasm.exports.stop;
+        document.getElementById("reset-btn").onclick = wasm.exports.reset;
+      });
+    }
+  </script>
+</html>
