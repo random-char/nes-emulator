@@ -95,7 +95,7 @@ func keyUp(key byte) {
 }
 
 //export insertCartridge
-func insertCartridge(b64Cartridge string) {
+func insertCartridgeB64(b64Cartridge string) {
 	cart, err := cartridge.LoadFromBase64(b64Cartridge)
 	if err != nil {
 		println("Cartridge wasn't loaded")

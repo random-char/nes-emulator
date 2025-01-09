@@ -20,8 +20,9 @@ type CanvasVideoReceiver struct {
 	ctx     js.Value
 	imgData js.Value
 
-	debugCtx     js.Value
-	debugImgData js.Value
+	patternTablesCtx     js.Value
+	patternTable1ImgData js.Value
+	patternTable2ImgData js.Value
 }
 
 func NewCanvasVideoReceiver(
@@ -42,58 +43,33 @@ func NewCanvasVideoReceiver(
 		ctx:     ctx,
 		imgData: ctx.Call("createImageData", gameWidth, gameHeight),
 
-		debugCtx:     debugCtx,
-		debugImgData: debugCtx.Call("createImageData", debugWidth, debugHeight),
+		patternTablesCtx:     debugCtx,
+		patternTable1ImgData: debugCtx.Call("createImageData", debugWidth/2, debugHeight),
+		patternTable2ImgData: debugCtx.Call("createImageData", debugWidth/2, debugHeight),
 	}
 }
 
-func (cvr *CanvasVideoReceiver) RenderFrame(pixels []*visuals.Pixel) {
+func (cvr *CanvasVideoReceiver) Render(pixelData []uint8) {
 	data := cvr.imgData.Get("data")
 
-	currentIndex := 0
-	for _, p := range pixels {
-		data.SetIndex(currentIndex, p.R)
-		data.SetIndex(currentIndex+1, p.G)
-		data.SetIndex(currentIndex+2, p.B)
-		data.SetIndex(currentIndex+3, 255)
-		currentIndex += 4
-	}
+	js.CopyBytesToJS(data, pixelData)
 
-	cvr.ctx.Call(
-		"putImageData",
-		cvr.imgData,
-		0, 0,
-	)
+	cvr.ctx.Call("putImageData", cvr.imgData, 0, 0)
 }
 
 func (cvr *CanvasVideoReceiver) RenderPatternTables(i uint16, sprite *visuals.Sprite) {
-	data := cvr.debugImgData.Get("data")
-
-	var p *visuals.Pixel
-	var x, y uint16
-	var currentIndex int
-	var err error
-
-	for x = 0; x < sprite.GetWidth(); x++ {
-		for y = 0; y < sprite.GetHeight(); y++ {
-			p, err = sprite.GetPixel(x, y)
-			if err != nil {
-				continue
-			}
-
-			currentIndex = int(y*debugWidth+x+sprite.GetWidth()*i) * 4
-
-			data.SetIndex(currentIndex, p.R)
-			data.SetIndex(currentIndex+1, p.G)
-			data.SetIndex(currentIndex+2, p.B)
-			data.SetIndex(currentIndex+3, 255)
-
-		}
+	var imgData js.Value
+	if i == 0 {
+		imgData = cvr.patternTable1ImgData.Get("data")
+	} else {
+		imgData = cvr.patternTable2ImgData.Get("data")
 	}
 
-	cvr.debugCtx.Call(
-		"putImageData",
-		cvr.debugImgData,
-		0, 0,
-	)
+	js.CopyBytesToJS(imgData, sprite.GetPixelsData())
+
+	if i == 0 {
+		cvr.patternTablesCtx.Call("putImageData", cvr.patternTable1ImgData, 0, 0)
+	} else {
+		cvr.patternTablesCtx.Call("putImageData", cvr.patternTable2ImgData, debugWidth/2, 0)
+	}
 }

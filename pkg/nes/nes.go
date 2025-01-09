@@ -95,12 +95,13 @@ func (nes *NES) Start() error {
 
 	nes.running = true
 
-	ticker := time.NewTicker(75 * time.Millisecond)
+	ticker := time.NewTicker(20 * time.Millisecond)
 	go func(ticker *time.Ticker) {
 		for {
 			select {
 			case <-ticker.C:
 				nes.Frame()
+				//nes.Clock()
 			case <-nes.stopChan:
 				return
 			}

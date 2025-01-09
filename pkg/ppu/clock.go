@@ -13,6 +13,7 @@ const (
 )
 
 var pixels [imageWidth * imageHeight]*visuals.Pixel
+var pixelBytes [imageWidth * imageHeight * 4]uint8
 var nOAMEntry uint8
 var spriteSize uint8
 
@@ -303,7 +304,7 @@ func (ppu *Ricoh2c02) Clock() bool {
 		}
 	}
 
-	setPixel(
+	setPixelByte(
 		int(ppu.cycle-1),
 		int(ppu.scanline),
 		ppu.getColorFromPaletteRam(palette, pixel),
@@ -318,7 +319,7 @@ func (ppu *Ricoh2c02) Clock() bool {
 			ppu.scanline = -1
 
 			if ppu.receiver != nil {
-				ppu.receiver.RenderFrame(pixels[:])
+                ppu.receiver.Render(pixelBytes[:])
 			}
 
 			if ppu.debugReceiver != nil {
@@ -442,4 +443,15 @@ func setPixel(x, y int, pixel *visuals.Pixel) {
 	}
 
 	pixels[(y*imageWidth + x)] = pixel
+}
+
+func setPixelByte(x, y int, pixel *visuals.Pixel) {
+	if x < 0 || y < 0 || x >= imageWidth || y >= imageHeight {
+		return
+	}
+
+	pixelBytes[(y*imageWidth + x)*4 + 0] = pixel.R
+	pixelBytes[(y*imageWidth + x)*4 + 1] = pixel.G
+	pixelBytes[(y*imageWidth + x)*4 + 2] = pixel.B
+	pixelBytes[(y*imageWidth + x)*4 + 3] = 255
 }

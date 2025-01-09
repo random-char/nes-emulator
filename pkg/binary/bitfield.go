@@ -1,6 +1,5 @@
 package binary
 
-
 func SetBoolFlag[T uint8 | uint16](bitfield *T, flagMask T, value bool) {
 	if value {
 		*bitfield |= flagMask

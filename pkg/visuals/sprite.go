@@ -55,3 +55,24 @@ func (s *Sprite) SetPixel(x, y uint16, pixel *Pixel) error {
 	s.pixels[x][y] = pixel
 	return nil
 }
+
+func (s *Sprite) GetPixelsData() []uint8 {
+	data := make(
+		[]uint8,
+		int(s.width)*int(s.height)*4,
+		int(s.width)*int(s.height)*4,
+	)
+
+	var x, y, i uint16 = 0, 0, 0
+	for x = 0; x < s.width; x++ {
+		for y = 0; y < s.height; y++ {
+			data[i] = s.pixels[x][y].R
+			data[i+1] = s.pixels[x][y].G
+			data[i+2] = s.pixels[x][y].B
+			data[i+3] = 255
+			i += 4
+		}
+	}
+
+	return data
+}
